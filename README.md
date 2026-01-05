@@ -24,6 +24,5 @@ You can install the development version of WolfPackR from
 [GitHub](https://github.com/) with:
 
 ``` r
-# install.packages("pak")
 remotes::install_github("eboncourt/WolfPackR")
 ```
