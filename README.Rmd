@@ -25,5 +25,5 @@ The goal of WolfPackR is to identify and analyze wolf pack structures by integra
 You can install the development version of WolfPackR from [GitHub](https://github.com/) with:
 
 ``` r
-remotes::install.github("eboncourt/WolfPackR")
+remotes::install_github("eboncourt/WolfPackR")
 ```
