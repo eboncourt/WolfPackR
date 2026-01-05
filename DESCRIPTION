@@ -1,5 +1,5 @@
 Package: WolfPackR
-Title: Identifies wolf packs based on genetic and spatial data (One Line, Title Case)
+Title: Identifies wolf packs based on genetic and spatial data
 Version: 0.90
 Authors@R: 
     person("Etienne", "Boncourt", , "etienne.boncourt@gmail.com", role = c("aut", "cre"),
