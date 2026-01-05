@@ -6,7 +6,7 @@
 #' @param samples An `sf` object with spatial data for individuals.
 #' @return An `sf` object with individuals and their assigned genetic groups.
 #' @importFrom igraph graph_from_adjacency_matrix plot components
-#' @importFrom dplyr rows_patch filter mutate
+#' @importFrom dplyr rows_patch filter mutate row_number
 #' @export
 #' @examples
 #' relate <- read.csv("path/to/relatedness_matrix.csv", sep = ";", dec = ",")
