@@ -5,7 +5,7 @@
 #' @param threshold The minimum relatedness value to consider for grouping (default: 0.4).
 #' @param samples An `sf` object with spatial data for individuals.
 #' @return An `sf` object with individuals and their assigned genetic groups.
-#' @importFrom igraph graph_from_adjacency_matrix plot
+#' @importFrom igraph graph_from_adjacency_matrix plot components
 #' @importFrom dplyr rows_patch filter mutate
 #' @export
 #' @examples
@@ -38,7 +38,7 @@ genetic_groups <- function(relate, estimator, threshold = 0.4, samples) {
   # Create the graph and detect groups
   g <- graph_from_adjacency_matrix(relate, weighted = TRUE, diag = FALSE, mode = "lower")
   plot(g, main = "Graph of Genetic Relationships")
-  dec <- as.data.frame(components(g)$membership)
+  dec <- as.data.frame(igraph::components(g)$membership)
   colnames(dec) <- c("group")
   dec$Individual <- rownames(dec)
 
