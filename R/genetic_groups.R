@@ -47,7 +47,7 @@ genetic_groups <- function(relate, estimator, threshold = 0.4, samples) {
   indiv_without_group <- subset(indiv_list, !(indiv_list$Individual %in% dec$Individual))
   if (nrow(indiv_without_group) > 0) {
     indiv_without_group <- indiv_without_group %>%
-      mutate(group = max(dec$group) + row_number())
+      mutate(group = max(dec$group) + dplyr::row_number())
     groups <- merge(x = indiv_list, y = dec, by = "Individual", all.x = TRUE)
     groups <- rows_patch(groups, indiv_without_group, by = "Individual")
   } else {
