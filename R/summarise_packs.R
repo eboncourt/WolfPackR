@@ -61,7 +61,7 @@ summarise_packs <- function(obs, ud_df, sex_column = "Sex", male_pattern = "M", 
           if (length(putative_dominant_male) > 1) putative_dominant_male <- paste(putative_dominant_male, collapse = ", ")
         }
 
-        if (nrow(femelles) > 0) {
+        if (nrow(females) > 0) {
           female_point_counts <- point_counts[point_counts$Individual %in% females$Individual, ]
           max_points_female <- max(female_point_counts$PointCount)
           putative_dominant_female <- as.character(female_point_counts$Individual[female_point_counts$PointCount == max_points_female])
