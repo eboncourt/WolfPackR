@@ -1,7 +1,7 @@
 #' samples
 #'
 #' Description.
-#'
+#' An sf object containing fictive individual names, sex and coordinates.
 #' @format A data frame with 49 rows and 3 variables:
 #' \describe{
 #'   \item{ Individual }{  character }
@@ -10,3 +10,4 @@
 #' }
 #' @source Source
 "samples"
+
