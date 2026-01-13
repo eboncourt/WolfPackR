@@ -18,7 +18,7 @@ ugly_ducklings <- function(obs, min_overlap = 0.5, buffer = 0, mcp.percent = 100
     Genetic_Group = obs$group,
     Pack = as.character(obs$group),
     stringsAsFactors = FALSE
-  ) #TRANSFORMER AVEC UNIQUE
+  ) #TO DO: TRANSFORM WITH UNIQUE
 
   # Step 1: Assign status to each individual (In Group or Lone Individual)
   obs$status <- "In Group"
@@ -95,7 +95,7 @@ ugly_ducklings <- function(obs, min_overlap = 0.5, buffer = 0, mcp.percent = 100
             mcp_ind <- mcp_sf(ind_obs, percentile = mcp.percent)
             if (!is.null(mcp_ind)) {
               a <- as.numeric(st_area(st_intersection(mcp_pack, mcp_ind))) / as.numeric(st_area(mcp_ind))
-              if (length(a) == 0 || as.numeric(a) <= min_overlap) {
+              if (length(a) == 0 || is.nan(as.numeric(a)) || as.numeric(a) <= min_overlap) {
                 results$Pack[results$Individual == ind_id] <- "Ugly Duckling"
               }
             }
@@ -121,7 +121,7 @@ ugly_ducklings <- function(obs, min_overlap = 0.5, buffer = 0, mcp.percent = 100
             if (!is.null(mcp_pack)) {
               buffered_mcp_pack <- st_buffer(mcp_pack, dist = buffer)
               a <- as.numeric(st_area(st_intersection(buffered_mcp_pack, mcp_ind))) / as.numeric(st_area(mcp_ind))
-              if (length(a) > 0 && as.numeric(a) > max_overlap) {
+              if (length(a) > 0 && !is.nan(as.numeric(a)) && as.numeric(a) > max_overlap) {
                 max_overlap <- a
                 best_pack <- as.character(gengroup)
               } else {
