@@ -2,13 +2,14 @@
 #' @description Computes the MCP for a set of spatial points using `sf`, with an option to exclude points beyond a given percentile of distance from the centroid. Largely inspired by juoe (https://rdrr.io/github/juoe/sdmflow/).
 #' @param data An `sf` object or a data.frame with columns `X` and `Y`.
 #' @param percentile The percentile of points (distance from centroid) excluded before calculating the MCP. Default is 100.
+#' @param buffer_radius The buffer distance around the coordinates if there is insufficient data to calculate a MCP (less than 3 data points) (default: 0.01).
 #' @return An `sf` object representing the MCP, or `NULL` if insufficient points.
 #' @importFrom sf st_as_sf st_centroid st_distance st_union st_convex_hull
 #' @export
 #' @examples
 #' obs_i <- subset(obs, group == 1)
 #' mcp_i <- mcp_sf(obs_i, percentile = 95)
-mcp_sf <- function(data, percentile=100){
+mcp_sf <- function(data, percentile=100, buffer_radius=0.01){
 
   if (!inherits(data, "sf")) {
     if (!all(c("X", "Y") %in% colnames(data))) {
@@ -17,18 +18,28 @@ mcp_sf <- function(data, percentile=100){
     data <- st_as_sf(data, coords = c("X", "Y"), crs = st_crs(data))
   }
 
-  if (nrow(data) < 3) {
-    warning(paste("Insufficient points (", nrow(data), ") to calculate MCP. Minimum required: 3"))
-    return(NULL)
+  if (nrow(data) == 2) {
+    warning(paste("Insufficient points (", nrow(data), ") to calculate MCP. Use of a buffer."))
+    return(st_buffer(st_linestring(st_coordinates(data)), buffer_radius))
   }
 
+  if (nrow(data) == 1) {
+    warning(paste("Insufficient points (", nrow(data), ") to calculate MCP. Use of a buffer."))
+    return(st_buffer(data, buffer_radius))
+  }
+  
   centroid <- st_centroid(st_union(data))
   dist <- as.numeric(st_distance(data, centroid))
   within_percentile_range <- dist <= quantile(dist, percentile/100)
 
   if (length(data[within_percentile_range,]) < 3) {
     warning(paste("Insufficient points (", length(data[within_percentile_range,]), ") after filtering by percentile to calculate MCP. Minimum required: 3"))
-    return(NULL)
+      if (length(data[within_percentile_range,]) == 2) {
+      return(st_buffer(st_linestring(st_coordinates(data[within_percentile_range,])), buffer_radius))
+    }
+  if (length(data[within_percentile_range,]) == 1) {
+      return(st_buffer(data[within_percentile_range,], buffer_radius))
+    }
   }
 
   data_filter <- st_union(data[within_percentile_range,])
