@@ -30,7 +30,8 @@ subgroups <- function(obs, genetic_group, percentile = 100, buffer_radius = 1, m
     group_individuals <- unique(group_obs$Individual)
 
     # Calculate initial MCP for the genetic group
-    mcp_group <- mcp_sf(group_individuals, obs, percentile, buffer_radius)
+    #mcp_group <- mcp_sf(group_individuals, obs, percentile, buffer_radius)
+    mcp_group <- mcp_sf(subset(obs, get(genetic_group)==gengroup), percentile, buffer_radius)
 
     # If the MCP cannot be calculated, all individuals are marked as "Lone Individual"
     if (is.null(mcp_group)) {
@@ -65,7 +66,8 @@ subgroups <- function(obs, genetic_group, percentile = 100, buffer_radius = 1, m
         # Calculate individual MCPs
         individual_mcps <- lapply(current_subgroup, function(ind) {
           ind_obs <- obs[obs$Individual == ind, ]
-          mcp_sf(c(ind), obs, percentile, buffer_radius)
+          #mcp_sf(c(ind), obs, percentile, buffer_radius)
+          mcp_sf(ind_obs, percentile, buffer_radius)
         })
         names(individual_mcps) <- current_subgroup
 
@@ -93,7 +95,8 @@ subgroups <- function(obs, genetic_group, percentile = 100, buffer_radius = 1, m
         for (cluster_id in unique(clusters$membership)) {
           cluster_members <- current_subgroup[clusters$membership == cluster_id]
           new_subgroups <- c(new_subgroups, list(cluster_members))
-          new_mcp <- mcp_sf(cluster_members, obs, percentile, buffer_radius)
+          #new_mcp <- mcp_sf(cluster_members, obs, percentile, buffer_radius)
+          new_mcp <- mcp_sf(subset(obs, Individual %in% cluster_members), percentile, buffer_radius)
           new_subgroup_mcps <- c(new_subgroup_mcps, list(new_mcp))
         }
       }
