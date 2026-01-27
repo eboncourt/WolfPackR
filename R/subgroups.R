@@ -89,7 +89,8 @@ subgroups <- function(obs, genetic_group, percentile = 100, buffer_radius = 1, m
         # Cluster individuals into spatial subgroups
         diag(overlap_matrix) <- 1
         graph <- graph_from_adjacency_matrix(overlap_matrix, weighted = TRUE, mode = "undirected", diag = FALSE)
-        clusters <- clusters(graph)
+        #TO DO: Ad graph pruning??
+        clusters <- components(graph)
 
         # Create new subgroups
         for (cluster_id in unique(clusters$membership)) {
@@ -124,7 +125,7 @@ subgroups <- function(obs, genetic_group, percentile = 100, buffer_radius = 1, m
 
     # Assign spatial subgroups to results
     for (i in seq_along(subgroups)) {
-      if (length(subgroups[[i]]) >= 3) {
+      if (length(subgroups[[i]]) >= 2) {
         results$Subgroup[results$Individual %in% subgroups[[i]]] <- paste0(gengroup, "_Subgroup_", i)
       } else {
         results$Subgroup[results$Individual %in% subgroups[[i]]] <- "Lone Individual"
