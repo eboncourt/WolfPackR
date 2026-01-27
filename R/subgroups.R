@@ -5,7 +5,7 @@
 #'
 #' @param obs An sf object containing the observations, with columns for individual IDs and coordinates.
 #' @param genetic_group The name of the column in `obs` that contains the genetic group information.
-#' @param mcp.percent The percentile for the MCP calculation (e.g., 95 for 95% MCP).
+#' @param percentile The percentile for the MCP calculation (e.g., 95 for 95% MCP).
 #' @param buffer_radius The buffer radius to use if the MCP cannot be calculated.
 #' @param max_iterations The maximum number of iterations for subgroup identification.
 #'
@@ -14,10 +14,10 @@
 #' @examples
 #' # Example usage:
 #' obs_sf <- st_as_sf(obs, coords = c("Longitude", "Latitude"), crs = 4326)
-#' subgroups_result <- subgroups(obs = obs_sf, genetic_group = "group", mcp.percent = 95, buffer_radius = 1000)
+#' subgroups_result <- subgroups(obs = obs_sf, genetic_group = "group", percentile = 95, buffer_radius = 1000)
 #'
 #' @export
-subgroups <- function(obs, genetic_group, mcp.percent = 100, buffer_radius = 1, max_iterations = 20) {
+subgroups <- function(obs, genetic_group, percentile = 100, buffer_radius = 1, max_iterations = 20) {
   
   # Initialize results
   results <- data.frame(Individual = obs$Individual, Genetic_Group = obs[[genetic_group]], Subgroup = obs[[genetic_group]], stringsAsFactors = FALSE)
@@ -30,7 +30,7 @@ subgroups <- function(obs, genetic_group, mcp.percent = 100, buffer_radius = 1, 
     group_individuals <- unique(group_obs$Individual)
 
     # Calculate initial MCP for the genetic group
-    mcp_group <- calculate_mcp(group_individuals, obs, mcp.percent, buffer_radius)
+    mcp_group <- mcp_sf(group_individuals, obs, percentile, buffer_radius)
 
     # If the MCP cannot be calculated, all individuals are marked as "Lone Individual"
     if (is.null(mcp_group)) {
@@ -65,7 +65,7 @@ subgroups <- function(obs, genetic_group, mcp.percent = 100, buffer_radius = 1, 
         # Calculate individual MCPs
         individual_mcps <- lapply(current_subgroup, function(ind) {
           ind_obs <- obs[obs$Individual == ind, ]
-          calculate_mcp(c(ind), obs, mcp.percent, buffer_radius)
+          mcp_sf(c(ind), obs, percentile, buffer_radius)
         })
         names(individual_mcps) <- current_subgroup
 
@@ -93,7 +93,7 @@ subgroups <- function(obs, genetic_group, mcp.percent = 100, buffer_radius = 1, 
         for (cluster_id in unique(clusters$membership)) {
           cluster_members <- current_subgroup[clusters$membership == cluster_id]
           new_subgroups <- c(new_subgroups, list(cluster_members))
-          new_mcp <- calculate_mcp(cluster_members, obs, mcp.percent, buffer_radius)
+          new_mcp <- mcp_sf(cluster_members, obs, percentile, buffer_radius)
           new_subgroup_mcps <- c(new_subgroup_mcps, list(new_mcp))
         }
       }
