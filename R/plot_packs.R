@@ -1,15 +1,17 @@
 #' @title Plot Packs Interactively
 #' @description Creates an interactive map visualizing the packs territories.
-#' @param obs An `sf` object with individuals and their genetic groups.
-#' @param ud_df A data.frame containing individuals, their genetic group, and their assigned pack.
+#' @param obs An `sf` object with individuals and their packs.
+#' @param pack The name of the column in `obs` that contains the pack information.
 #' @return An interactive leaflet map.
-#' @importFrom sf st_is_longlat st_coordinates st_polygon st_sf st_sfc
-#' @importFrom leaflet colorFactor addTiles addPolygons fitBounds addCircleMarkers addLegend
+#' @importFrom sf st_is_longlat st_coordinates st_polygon st_sf st_sfc st_as_sf
+#' @importFrom leaflet colorFactor addTiles addPolylines addPolygons fitBounds addCircleMarkers addLegend
 #' @export
 #' @examples
-#' map <- plot_groups(obs, ud_df = ud_df)
+#' map <- plot_packs(obs, pack = Pack)
 #' map
-plot_packs <- function(obs, ud_df) {
+plot_packs <- function(obs, pack) {
+  pack_name <- deparse(substitute(pack))
+
   suppressPackageStartupMessages({
     library(leaflet)
     library(sf)
@@ -26,12 +28,8 @@ plot_packs <- function(obs, ud_df) {
   }
 
   # Create a color palette for packs
-  packs <- unique(ud_df$Pack[ud_df$Pack != "Lone Individual"])
+  packs <- unique(obs[[pack_name]][obs[[pack_name]] != "Lone Individual"])
   colors <- colorFactor(palette = "Set1", domain = packs)
-
-  # Prepare data for leaflet
-  obs$Pack <- ud_df$Pack[match(obs$Individual, ud_df$Individual)]
-  obs$Color <- ifelse(obs$Pack == "Lone Individual", "red", colors(obs$Pack))
 
   # Ensure coordinates are in WGS84 (EPSG:4326)
   if (!st_is_longlat(obs)) {
@@ -47,7 +45,7 @@ plot_packs <- function(obs, ud_df) {
 
   # MCP for each pack (added first, under the points)
   for (pack in packs) {
-    pack_obs <- obs[obs$Pack == pack, ]
+    pack_obs <- obs[obs[[pack_name]] == pack, ]
     if (nrow(pack_obs) >= 3) {
       coords_pack <- st_coordinates(pack_obs)
       if (nrow(coords_pack) >= 3) {
@@ -60,15 +58,16 @@ plot_packs <- function(obs, ud_df) {
         if (!is.null(hull) && length(hull) >= 3) {
           hull_coords <- rbind(coords_pack[hull, ], coords_pack[hull[1], ])
           polygon <- st_polygon(list(hull_coords))
-          mcp_i <- st_sf(geometry = st_sfc(polygon), Pack = pack, Color = colors(pack))
+          mcp_sf <- st_sf(geometry = st_sfc(polygon), Pack = pack, Individuals = paste(unique(pack_obs$Individual), collapse = ", "))
 
+          # Use the sf object directly in addPolygons
           l <- l %>% addPolygons(
-            data = mcp_i,
+            data = mcp_sf,
             fillColor = colors(pack),
             color = colors(pack),
             fillOpacity = 0.3,
             weight = 2,
-            popup = pack
+            popup = ~paste("Pack:", Pack, "<br>Individuals:", Individuals)
           )
         }
       }
@@ -80,15 +79,17 @@ plot_packs <- function(obs, ud_df) {
   l <- l %>% fitBounds(lng1 = min(coords[, 1]), lat1 = min(coords[, 2]),
                        lng2 = max(coords[, 1]), lat2 = max(coords[, 2]))
 
-  # Add points to the map, colored by pack
+  # Prepare data for leaflet points
   obs_df <- data.frame(
     Individual = obs$Individual,
-    Pack = obs$Pack,
-    Color = obs$Color,
+    Pack = obs[[pack_name]],
     lon = coords[, 1],
     lat = coords[, 2],
     stringsAsFactors = FALSE
   )
+
+  # Assign colors based on pack
+  obs_df$Color <- ifelse(obs_df$Pack == "Lone Individual", "red", colors(obs_df$Pack))
 
   if (nrow(obs_df) > 0) {
     # Add regular circle markers for pack individuals
@@ -134,5 +135,4 @@ plot_packs <- function(obs, ud_df) {
   )
 
   return(l)
-
 }
