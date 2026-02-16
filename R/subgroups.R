@@ -1,10 +1,10 @@
 #' Identify Spatial Subgroups
 #'
-#' This function identifies spatial subgroups within genetic groups using Minimum Convex Polygons (MCP)
+#' This function identifies spatial subgroups within groups using Minimum Convex Polygons (MCP)
 #' and clustering based on spatial overlap.
 #'
 #' @param obs An sf object containing the observations, with columns for individual IDs and coordinates.
-#' @param genetic_group The name of the column in `obs` that contains the genetic group information.
+#' @param group The name of the column in `obs` that contains the group information.
 #' @param percentile The percentile for the MCP calculation (e.g., 95 for 95% MCP).
 #' @param buffer_radius The buffer radius to use if the MCP cannot be calculated.
 #' @param max_iterations The maximum number of iterations for subgroup identification.
@@ -14,24 +14,29 @@
 #' @examples
 #' # Example usage:
 #' obs_sf <- st_as_sf(obs, coords = c("Longitude", "Latitude"), crs = 4326)
-#' subgroups_result <- subgroups(obs = obs_sf, genetic_group = "group", percentile = 95, buffer_radius = 1000)
+#' subgroups_result <- subgroups(obs = obs_sf, group = group, percentile = 95, buffer_radius = 1000)
 #'
 #' @export
-subgroups <- function(obs, genetic_group, percentile = 100, buffer_radius = 1, max_iterations = 20) {
-  
-  # Initialize results
-  results <- data.frame(Individual = obs$Individual, Genetic_Group = obs[[genetic_group]], Subgroup = obs[[genetic_group]], stringsAsFactors = FALSE)
+subgroups <- function(obs, group, percentile = 100, buffer_radius = 1, max_iterations = 20) {
+  group_name <- deparse(substitute(group))
 
-  # Iterate for each genetic group
-  groups <- unique(obs[[genetic_group]])
+  # Initialize results
+  results <- data.frame(
+    Individual = obs$Individual,
+    Genetic_Group = obs[[group_name]],
+    Subgroup = obs[[group_name]],
+    stringsAsFactors = FALSE
+  )
+
+  # Iterate for each group
+  groups <- unique(obs[[group_name]])
 
   for (gengroup in groups) {
-    group_obs <- obs[obs[[genetic_group]] == gengroup, ]
+    group_obs <- obs %>% dplyr::filter(.data[[group_name]] == gengroup)
     group_individuals <- unique(group_obs$Individual)
 
-    # Calculate initial MCP for the genetic group
-    #mcp_group <- mcp_sf(group_individuals, obs, percentile, buffer_radius)
-    mcp_group <- mcp_sf(subset(obs, get(genetic_group)==gengroup), percentile, buffer_radius)
+    # Calculate initial MCP for the group
+    mcp_group <- mcp_sf(group_obs, percentile, buffer_radius)
 
     # If the MCP cannot be calculated, all individuals are marked as "Lone Individual"
     if (is.null(mcp_group)) {
@@ -40,7 +45,7 @@ subgroups <- function(obs, genetic_group, percentile = 100, buffer_radius = 1, m
     }
 
     # Identify spatial subgroups
-    subgroups <- list(group_individuals)
+    subgroups_list <- list(group_individuals)
     subgroup_mcps <- list(mcp_group)
 
     stable <- FALSE
@@ -52,8 +57,8 @@ subgroups <- function(obs, genetic_group, percentile = 100, buffer_radius = 1, m
       new_subgroup_mcps <- list()
 
       # For each existing subgroup
-      for (i in seq_along(subgroups)) {
-        current_subgroup <- subgroups[[i]]
+      for (i in seq_along(subgroups_list)) {
+        current_subgroup <- subgroups_list[[i]]
         current_mcp <- if (i <= length(subgroup_mcps)) subgroup_mcps[[i]] else NULL
 
         # If the subgroup has fewer than 3 individuals, keep it as is
@@ -65,8 +70,7 @@ subgroups <- function(obs, genetic_group, percentile = 100, buffer_radius = 1, m
 
         # Calculate individual MCPs
         individual_mcps <- lapply(current_subgroup, function(ind) {
-          ind_obs <- obs[obs$Individual == ind, ]
-          #mcp_sf(c(ind), obs, percentile, buffer_radius)
+          ind_obs <- obs %>% dplyr::filter(Individual == ind)
           mcp_sf(ind_obs, percentile, buffer_radius)
         })
         names(individual_mcps) <- current_subgroup
@@ -88,27 +92,25 @@ subgroups <- function(obs, genetic_group, percentile = 100, buffer_radius = 1, m
 
         # Cluster individuals into spatial subgroups
         diag(overlap_matrix) <- 1
-        graph <- graph_from_adjacency_matrix(overlap_matrix, weighted = TRUE, mode = "undirected", diag = FALSE)
-        #TO DO: Ad graph pruning??
-        clusters <- components(graph)
+        graph <- igraph::graph_from_adjacency_matrix(overlap_matrix, weighted = TRUE, mode = "undirected", diag = FALSE)
+        clusters <- igraph::components(graph)
 
         # Create new subgroups
         for (cluster_id in unique(clusters$membership)) {
           cluster_members <- current_subgroup[clusters$membership == cluster_id]
           new_subgroups <- c(new_subgroups, list(cluster_members))
-          #new_mcp <- mcp_sf(cluster_members, obs, percentile, buffer_radius)
-          new_mcp <- mcp_sf(subset(obs, Individual %in% cluster_members), percentile, buffer_radius)
+          new_mcp <- mcp_sf(obs %>% dplyr::filter(Individual %in% cluster_members), percentile, buffer_radius)
           new_subgroup_mcps <- c(new_subgroup_mcps, list(new_mcp))
         }
       }
 
       # Check stability
-      if (length(new_subgroups) != length(subgroups)) {
+      if (length(new_subgroups) != length(subgroups_list)) {
         stable <- FALSE
       } else {
         same_groups <- TRUE
         for (i in seq_along(new_subgroups)) {
-          if (i > length(subgroups) || !setequal(new_subgroups[[i]], subgroups[[i]])) {
+          if (i > length(subgroups_list) || !setequal(new_subgroups[[i]], subgroups_list[[i]])) {
             same_groups <- FALSE
             break
           }
@@ -118,17 +120,17 @@ subgroups <- function(obs, genetic_group, percentile = 100, buffer_radius = 1, m
         }
       }
 
-      subgroups <- new_subgroups
+      subgroups_list <- new_subgroups
       subgroup_mcps <- new_subgroup_mcps
       iteration <- iteration + 1
     }
 
     # Assign spatial subgroups to results
-    for (i in seq_along(subgroups)) {
-      if (length(subgroups[[i]]) >= 2) {
-        results$Subgroup[results$Individual %in% subgroups[[i]]] <- paste0(gengroup, "_Subgroup_", i)
+    for (i in seq_along(subgroups_list)) {
+      if (length(subgroups_list[[i]]) >= 2) {
+        results$Subgroup[results$Individual %in% subgroups_list[[i]]] <- paste0(gengroup, "_Subgroup_", i)
       } else {
-        results$Subgroup[results$Individual %in% subgroups[[i]]] <- "Lone Individual"
+        results$Subgroup[results$Individual %in% subgroups_list[[i]]] <- "Lone Individual"
       }
     }
   }
