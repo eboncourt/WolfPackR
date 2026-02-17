@@ -1,10 +1,10 @@
-#' Identify spatial groups or subgroups
+#' @title Identify spatial groups or subgroups
 #'
 #' This function identifies spatial groups or subgroups within groups using Minimum Convex Polygons (MCP)
 #' and clustering based on spatial overlap.
 #'
 #' @param obs An sf object containing the observations, with columns for individual IDs and coordinates.
-#' @param group The name of the column in `obs` that contains the group information.
+#' @param group The name of the column in `obs` that contains the group information. If not provided, all individuals are treated as a single group.
 #' @param percentile The percentile for the MCP calculation (e.g., 95 for 95% MCP).
 #' @param buffer_radius The buffer radius to use if the MCP cannot be calculated.
 #' @param max_iterations The maximum number of iterations for subgroup identification.
@@ -15,24 +15,36 @@
 #' # Example usage:
 #' obs_sf <- st_as_sf(obs, coords = c("Longitude", "Latitude"), crs = 4326)
 #' subgroups_result <- spatial_groups(obs = obs_sf, group = group, percentile = 95, buffer_radius = 1000)
+#' # Without group
+#' subgroups_result <- spatial_groups(obs = obs_sf, percentile = 95, buffer_radius = 1000)
 #'
 #' @export
-spatial_groups <- function(obs, group, percentile = 100, buffer_radius = 1, max_iterations = 20) {
-  group_name <- deparse(substitute(group))
-
+spatial_groups <- function(obs, group = NULL, percentile = 100, buffer_radius = 1, max_iterations = 20) {
   # Initialize results
   results <- data.frame(
     Individual = obs$Individual,
-    Genetic_Group = obs[[group_name]],
-    Subgroup = obs[[group_name]],
+    Group = NA, 
+    Subgroup = "All_Individuals",
     stringsAsFactors = FALSE
   )
 
-  # Iterate for each group
-  groups <- unique(obs[[group_name]])
+  # If group is provided, use it; otherwise, treat all individuals as a single group
+  if (!is.null(group)) {
+    group_name <- deparse(substitute(group))
+    results$Group <- obs[[group_name]]
+    groups <- unique(obs[[group_name]])
+  } else {
+    groups <- "All_Individuals"
+    results$Group <- "All_Individuals"
+  }
 
   for (gengroup in groups) {
-    group_obs <- obs %>% dplyr::filter(.data[[group_name]] == gengroup)
+    if (!is.null(group)) {
+      group_obs <- obs %>% dplyr::filter(.data[[group_name]] == gengroup)
+    } else {
+      group_obs <- obs
+    }
+
     group_individuals <- unique(group_obs$Individual)
 
     # Calculate initial MCP for the group
@@ -128,7 +140,11 @@ spatial_groups <- function(obs, group, percentile = 100, buffer_radius = 1, max_
     # Assign spatial subgroups to results
     for (i in seq_along(subgroups_list)) {
       if (length(subgroups_list[[i]]) >= 2) {
-        results$Subgroup[results$Individual %in% subgroups_list[[i]]] <- paste0(gengroup, "_Subgroup_", i)
+        if (!is.null(group)) {
+          results$Subgroup[results$Individual %in% subgroups_list[[i]]] <- paste0(gengroup, "_Subgroup_", i)
+        } else {
+          results$Subgroup[results$Individual %in% subgroups_list[[i]]] <- paste0("Subgroup_", i)
+        }
       } else {
         results$Subgroup[results$Individual %in% subgroups_list[[i]]] <- "Lone Individual"
       }
