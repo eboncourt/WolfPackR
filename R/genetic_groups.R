@@ -3,16 +3,14 @@
 #' @param relate A data.frame with columns: `ind1`, `ind2`, and the estimator column. Based on the output format of the `coancestry` function of the `related` package (Pew et al., 2015).
 #' @param estimator The name of the column in `relate` containing relatedness estimates.
 #' @param threshold The minimum relatedness value to consider for grouping (default: 0.4).
-#' @param samples An `sf` object with spatial data for individuals.
 #' @return An `sf` object with individuals and their assigned genetic groups.
 #' @importFrom igraph graph_from_adjacency_matrix plot components
 #' @importFrom dplyr rows_patch filter mutate row_number
 #' @export
 #' @examples
 #' relate <- read.csv("path/to/relatedness_matrix.csv", sep = ";", dec = ",")
-#' samples <- st_read("path/to/spatial_data.gpkg")
-#' obs <- genetic_groups(relate, "wang", 0.4, samples)
-genetic_groups <- function(relate, estimator, threshold = 0.4, samples) {
+#' obs <- genetic_groups(relate, "wang", 0.4)
+genetic_groups <- function(relate, estimator, threshold = 0.4) {
   if (!requireNamespace("igraph", quietly = TRUE)) {
     stop("Package 'igraph' is required but not installed.")
   }
@@ -57,7 +55,5 @@ genetic_groups <- function(relate, estimator, threshold = 0.4, samples) {
     groups <- merge(x = indiv_list, y = dec, by = "Individual", all.x = TRUE)
   }
 
-  # Merge with spatial data
-  obs <- merge(x = samples, y = groups, by = "Individual")
-  return(obs)
+  return(groups)
 }
