@@ -28,7 +28,7 @@ genetic_groups <- function(relate, estimator, threshold = 0.4) {
   lvl1 <- levels(as.factor(relate$ind1))
   lvl2 <- levels(as.factor(relate$ind2))
   ind <- unique(c(lvl1, lvl2))
-  tab <- data.frame(ind1 = ind, ind2 = ind, wang = NA)
+  tab <- data.frame(ind1 = ind, ind2 = ind, wang = 1)
   names(tab)[3] <- estimator
   relate <- rbind(relate, tab)
 

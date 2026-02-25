@@ -1,7 +1,7 @@
 #' @title Summarise Packs and Individuals
 #' @description Summarises individuals and their packs, including putative dominant individuals.
-#' @param obs An `sf` object with individuals and their genetic groups.
-#' @param ud_df A data.frame containing individuals, their genetic group, and their assigned pack.
+#' @param obs An `sf` object with individuals and their packs.
+#' @param pack The name of the column in `obs` that contains the pack information.
 #' @param sex_column The name of the column in obs that contains sex information (default: "Sex").
 #' @param male_pattern A regex pattern to identify males in Individual IDs (default: "M").
 #' @param female_pattern A regex pattern to identify females in Individual IDs (default: "F").
@@ -10,21 +10,28 @@
 #' @importFrom sf st_convex_hull st_union st_area
 #' @export
 #' @examples
-#' summary <- summarise_packs(obs, ud_df, sex_column = "Sex")
-summarise_packs <- function(obs, ud_df, sex_column = "Sex", male_pattern = "M", female_pattern = "F") {
+#' summary <- summarise_packs(obs, pack = Pack)
+summarise_packs <- function(obs, pack, sex_column = "Sex", male_pattern = "M", female_pattern = "F") {
+  pack_name <- deparse(substitute(pack))
+
+  # Vérifier que la colonne pack existe
+  if (!pack_name %in% names(obs)) {
+    stop(paste("La colonne", pack_name, "n'existe pas dans les données."))
+  }
+
   # Count the number of points per individual directly from obs
   point_counts <- as.data.frame(table(obs$Individual))
   colnames(point_counts) <- c("Individual", "PointCount")
 
-  # Merge ud_df with point_counts to get the number of points per individual
-  ud_df_with_points <- merge(ud_df, point_counts, by = "Individual", all.x = TRUE)
+  # Merge point_counts with obs to get the number of points per individual
+  obs_with_points <- merge(obs, point_counts, by = "Individual", all.x = TRUE)
 
   # Create a summary list for each pack
-  packs <- unique(ud_df$Pack)
+  packs <- unique(obs_with_points[[pack_name]])
   pack_summaries <- list()
 
   for (pack in packs) {
-    pack_members <- ud_df_with_points[ud_df_with_points$Pack == pack, ]
+    pack_members <- obs_with_points[obs_with_points[[pack_name]] == pack, ]
     total_individuals <- length(unique(pack_members$Individual))
     individual_names <- unique(pack_members$Individual)
     point_counts_list <- point_counts[point_counts$Individual %in% individual_names, ]
@@ -41,10 +48,8 @@ summarise_packs <- function(obs, ud_df, sex_column = "Sex", male_pattern = "M", 
     territory_area <- NA
 
     if (pack != "Lone Individual") {
-
       # Calculate territory area based on convex hull
-      obs_with_ud <- merge(obs, ud_df, by = "Individual", all.x = TRUE)
-      pack_obs <- obs_with_ud %>% filter(Pack == pack)
+      pack_obs <- obs_with_points %>% dplyr::filter(.data[[pack_name]] == pack)
       mcp_pack <- st_convex_hull(st_union(pack_obs))
       territory_area <- st_area(mcp_pack)
 
@@ -101,7 +106,7 @@ summarise_packs <- function(obs, ud_df, sex_column = "Sex", male_pattern = "M", 
       TerritoryArea = territory_area
     )
 
-    pack_summaries[[pack]] <- pack_summary
+    pack_summaries[[as.character(pack)]] <- pack_summary
   }
 
   return(pack_summaries)
