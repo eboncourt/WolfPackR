@@ -14,7 +14,7 @@ to account for spatial territory overlap. The package identifies “lone
 individuals” (genetically or spatially isolated) and “ugly ducklings”
 (genetically linked but spatially disconnected), allowing for a nuanced
 understanding of pack dynamics. WolfPackR leverages igraph for network
-analysis, sf for spatial operations, and ggplot2/leaflet for
+analysis, sf for spatial operations, and leaflet for
 visualization, making it a comprehensive tool for ecologists studying
 social structures in wolf populations.
 
