@@ -4,12 +4,12 @@
 \alias{mcp_sf}
 \title{Calculate Minimum Convex Polygon (MCP) with Percentile Filtering}
 \usage{
-mcp_sf(data, percentile = 100)
+mcp_sf(data, percentile = 100, buffer_radius = 0.01)
 }
 \arguments{
-\item{data}{An \code{sf} object or a data.frame with columns \code{X} and \code{Y}.}
-
-\item{percentile}{The percentile of points (distance from centroid) excluded before calculating the MCP. Default is 100.}
+  \item{data}{An \code{sf} object or a data.frame with columns \code{X} and \code{Y}.}
+  \item{percentile}{The percentile of points (distance from centroid) excluded before calculating the MCP. Default is 100.}
+  \item{buffer_radius}{The buffer distance around the coordinates if there is insufficient data to calculate an MCP (less than 3 data points) (default: 0.01).}
 }
 \value{
 An \code{sf} object representing the MCP, or \code{NULL} if insufficient points.
@@ -18,6 +18,7 @@ An \code{sf} object representing the MCP, or \code{NULL} if insufficient points.
 Computes the MCP for a set of spatial points using \code{sf}, with an option to exclude points beyond a given percentile of distance from the centroid. Largely inspired by juoe (https://rdrr.io/github/juoe/sdmflow/).
 }
 \examples{
+# Example usage:
 obs_i <- subset(obs, group == 1)
 mcp_i <- mcp_sf(obs_i, percentile = 95)
 }
