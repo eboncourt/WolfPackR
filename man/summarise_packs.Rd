@@ -4,24 +4,14 @@
 \alias{summarise_packs}
 \title{Summarise Packs and Individuals}
 \usage{
-summarise_packs(
-  obs,
-  ud_df,
-  sex_column = "Sex",
-  male_pattern = "M",
-  female_pattern = "F"
-)
+summarise_packs(obs, pack, sex_column = "Sex", male_pattern = "M", female_pattern = "F")
 }
 \arguments{
-\item{obs}{An \code{sf} object with individuals and their genetic groups.}
-
-\item{ud_df}{A data.frame containing individuals, their genetic group, and their assigned pack.}
-
-\item{sex_column}{The name of the column in obs that contains sex information (default: "Sex").}
-
-\item{male_pattern}{A regex pattern to identify males in Individual IDs (default: "M").}
-
-\item{female_pattern}{A regex pattern to identify females in Individual IDs (default: "F").}
+  \item{obs}{An `sf` object with individuals and their packs.}
+  \item{pack}{The name of the column in `obs` that contains the pack information.}
+  \item{sex_column}{The name of the column in `obs` that contains sex information (default: "Sex").}
+  \item{male_pattern}{A regex pattern to identify males in Individual IDs (default: "M").}
+  \item{female_pattern}{A regex pattern to identify females in Individual IDs (default: "F").}
 }
 \value{
 A list containing detailed summaries of packs and individuals.
@@ -30,5 +20,6 @@ A list containing detailed summaries of packs and individuals.
 Summarises individuals and their packs, including putative dominant individuals.
 }
 \examples{
-summary <- summarise_packs(obs, ud_df, sex_column = "Sex")
+# Example usage:
+summary <- summarise_packs(obs, pack = Pack)
 }
