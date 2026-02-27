@@ -4,12 +4,11 @@
 \alias{plot_packs}
 \title{Plot Packs Interactively}
 \usage{
-plot_packs(obs, ud_df)
+plot_packs(obs, pack)
 }
 \arguments{
-\item{obs}{An \code{sf} object with individuals and their genetic groups.}
-
-\item{ud_df}{A data.frame containing individuals, their genetic group, and their assigned pack.}
+  \item{obs}{An `sf` object with individuals and their packs.}
+  \item{pack}{The name of the column in `obs` that contains the pack information.}
 }
 \value{
 An interactive leaflet map.
@@ -18,6 +17,7 @@ An interactive leaflet map.
 Creates an interactive map visualizing the packs territories.
 }
 \examples{
-map <- plot_groups(obs, ud_df = ud_df)
+# Example usage:
+map <- plot_packs(obs, pack = Pack)
 map
 }
