@@ -4,16 +4,14 @@
 \alias{ugly_ducklings}
 \title{Identify and Assign Ugly Ducklings and Lone Individuals}
 \usage{
-ugly_ducklings(obs, min_overlap = 0.5, buffer = 0, mcp.percent = 100)
+ugly_ducklings(obs, group, min_overlap = 0.5, buffer = 0, mcp.percent = 100)
 }
 \arguments{
-\item{obs}{An \code{sf} object with individuals and their genetic groups.}
-
-\item{min_overlap}{The minimum overlap percentage to consider an individual as integrated (default: 0.5).}
-
-\item{buffer}{The buffer distance around the MCP of the group to consider for inclusion (default: 0).}
-
-\item{mcp.percent}{The percentile of points (distance from centroid) excluded before calculating the MCP (default: 100).}
+  \item{obs}{An `sf` object with individuals and their groups (genetic or spatial groups). The first column must contain the individuals' ID.}
+  \item{group}{Name of the column containing the identifier of groups of individuals, which may be genetic or spatial groups.}
+  \item{min_overlap}{The minimum overlap percentage to consider an individual as integrated (default: 0.5).}
+  \item{buffer}{The buffer distance around the MCP of the group to consider for inclusion (default: 0).}
+  \item{mcp.percent}{The percentile of points (distance from centroid) excluded before calculating the MCP (default: 100).}
 }
 \value{
 A data.frame containing all individuals, their genetic group, and their assigned pack.
@@ -22,5 +20,6 @@ A data.frame containing all individuals, their genetic group, and their assigned
 Finds individuals that are genetically linked but spatially isolated, and assigns them to the most suitable pack.
 }
 \examples{
-ud_df <- ugly_ducklings(obs, min_overlap = 0.5, buffer = 1000, mcp.percent = 95)
+# Example usage:
+ud_df <- ugly_ducklings(obs, group, min_overlap = 0.5, buffer = 1000, mcp.percent = 95)
 }
