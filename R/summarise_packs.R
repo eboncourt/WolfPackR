@@ -35,7 +35,6 @@ summarise_packs <- function(obs, pack, sex_column = "Sex", male_pattern = "M", f
     total_individuals <- length(unique(pack_members$Individual))
     individual_names <- unique(pack_members$Individual)
     point_counts_list <- point_counts[point_counts$Individual %in% individual_names, ]
-    genetic_groups <- unique(pack_members$Genetic_Group)
 
     # Total points in the pack
     total_points <- sum(point_counts_list$PointCount, na.rm = TRUE)
@@ -100,7 +99,6 @@ summarise_packs <- function(obs, pack, sex_column = "Sex", male_pattern = "M", f
       TotalPoints = total_points,
       Individuals = individual_names,
       PointCounts = point_counts_list,
-      GeneticGroups = genetic_groups,
       PutativeDominantMale = putative_dominant_male,
       PutativeDominantFemale = putative_dominant_female,
       TerritoryArea = territory_area
