@@ -1,17 +1,12 @@
 #' @title Identify spatial groups or subgroups
-#'
-#' This function identifies spatial groups or subgroups within groups using Minimum Convex Polygons (MCP)
-#' and clustering based on spatial overlap.
-#'
+#' @description This function identifies spatial groups or subgroups within groups using Minimum Convex Polygons (MCP) and clustering based on spatial overlap.
 #' @param obs An sf object containing the observations, with columns for individual IDs and coordinates.
 #' @param group The name of the column in `obs` that contains the group information. If not provided, all individuals are treated as a single group.
 #' @param percentile The percentile for the MCP calculation (e.g., 95 for 95% MCP).
 #' @param buffer_radius The buffer radius to use if the MCP cannot be calculated.
 #' @param max_iterations The maximum number of iterations for subgroup identification.
 #' @param min_mcp_overlap The minimum spatial overlap (between 0 and 1) required to consider two MCPs as linked (default: 0.5).
-#'
 #' @return A data.frame with updated subgroup assignments.
-#'
 #' @examples
 #' # Example usage:
 #' obs_sf <- st_as_sf(obs, coords = c("Longitude", "Latitude"), crs = 4326)
