@@ -1,0 +1,120 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+title: "WolfPackR: Analyzing Wolf Pack Territories"  
+author: "Etienne Boncourt"  
+date: "`r Sys.Date()`"  
+output:  
+  rmarkdown::html_vignette:  
+    toc: true  
+toc_float: true
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(error = TRUE, message = FALSE, warning = FALSE)
+```
+
+# Introduction
+
+The **WolfPackR** package provides a comprehensive toolkit for analyzing the genetic and spatial structures of wolf packs. This vignette demonstrates how to use **WolfPackR** to analyze wolf pack territories, from genetic relatedness to spatial pack visualization, using both simulated and real-world datasets.
+
+---
+
+# Data Preparation
+
+First, we load the necessary libraries and datasets provided with the package.
+
+```{r load-libraries}
+library(WolfPackR)
+library(dplyr)
+library(sf)
+```
+
+---
+
+# Analysis Workflow
+
+## 1. Simulated Dataset
+
+### Genetic Groups
+
+We start by identifying genetic groups using the `genetic_groups()` function. This function clusters individuals based on genetic relatedness.
+
+```{r genetic-groups}
+data("relate")
+data("samples")
+
+gengroups <- genetic_groups(relate, threshold = 0.4, estimator = "wang")
+obs <- merge(samples, gengroups, by = "Individual")
+plot_packs(obs, group)
+```
+
+### Ugly Ducklings
+
+Next, we identify "ugly ducklings"—individuals that do not fit well into their assigned genetic groups—using the `ugly_ducklings()` function.
+
+```{r ugly-ducklings}
+ud_df <- ugly_ducklings(obs, group = group, min_overlap = 0.7, buffer = 0, mcp.percent = 100)
+obs2 <- merge(samples, ud_df, by = "Individual")
+plot_packs(obs2, new_group)
+```
+
+### Spatial Groups
+
+Finally, we refine the spatial grouping of individuals using the `spatial_groups()` function, which clusters individuals based on spatial proximity.
+
+```{r spatial-groups}
+spatgroups <- spatial_groups(obs2, group = "new_group", percentile = 100,
+                             buffer_radius = 0.0000001, max_iterations = 20, min_mcp_overlap = 0.6)
+obs3 <- merge(samples, spatgroups, by = "Individual")
+plot_packs(obs3, Subgroup)
+```
+
+---
+
+## 2. Real-Life Dataset: Carpathian Wolves
+
+### Genetic Groups
+
+We apply the same workflow to a real-life dataset from Iosif et al. (2025), focusing on Carpathian wolves.
+
+```{r genetic-groups-carpat}
+data("Bruvo_Carpathians")
+data("samples_Carpathians")
+
+gengroups_carpat <- genetic_groups(Bruvo_Carpathians, threshold = 0.7, estimator = "1-Bruvo")
+obs_carpat <- merge(samples_Carpathians, gengroups_carpat, by = "Individual")
+plot_packs(obs_carpat, group)
+```
+
+### Ugly Ducklings
+
+We identify "ugly ducklings" in the Carpathian dataset.
+
+```{r ugly-ducklings-carpat}
+ud_df_carpat <- ugly_ducklings(obs_carpat, group = group, min_overlap = 0.5, buffer = 0, mcp.percent = 100)
+obs2_carpat <- merge(samples_Carpathians, ud_df_carpat, by = "Individual")
+plot_packs(obs2_carpat, new_group)
+```
+
+### Spatial Groups
+
+We refine the spatial grouping for the Carpathian dataset.
+
+```{r spatial-groups-carpat}
+spatgroups_carpat <- spatial_groups(obs2_carpat, group = "new_group", percentile = 100,
+                             buffer_radius = 0.0000001, max_iterations = 20, min_mcp_overlap = 0.5)
+obs3_carpat <- merge(samples_Carpathians, spatgroups_carpat, by = "Individual")
+plot_packs(obs3_carpat, Subgroup)
+```
+
+---
+
+# Conclusion
+
+This vignette demonstrates the core functionality of **WolfPackR** for analyzing wolf pack territories using both simulated and real-world datasets. The package provides a robust framework for genetic and spatial analysis, enabling researchers to gain insights into wolf pack dynamics.
+
+For more details, refer to the [WolfPackR GitHub repository](https://github.com/eboncourt/WolfPackR).
