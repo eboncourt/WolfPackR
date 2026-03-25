@@ -26,3 +26,5 @@ You can install the development version of WolfPackR from
 ``` r
 remotes::install_github("eboncourt/WolfPackR")
 ```
+## Vignette
+You can find a compiled vignette following [this link](https://github.com/eboncourt/WolfPackR/blob/master/inst/doc/WolfPackR_vignette.html).
