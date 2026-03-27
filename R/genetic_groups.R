@@ -11,9 +11,6 @@
 #' relate <- read.csv("path/to/relatedness_matrix.csv", sep = ";", dec = ",")
 #' obs <- genetic_groups(relate, "wang", 0.4)
 genetic_groups <- function(relate, estimator, threshold = 0.4) {
-  if (!requireNamespace("igraph", quietly = TRUE)) {
-    stop("Package 'igraph' is required but not installed.")
-  }
 
   # list of individuals
   indiv_list <- as.data.frame(unique(c(relate$ind1, relate$ind2)))
