@@ -5,7 +5,7 @@
 #' @param threshold The minimum relatedness value to consider for grouping (default: 0.4).
 #' @return An `sf` object with individuals and their assigned genetic groups.
 #' @importFrom igraph graph_from_adjacency_matrix plot components
-#' @importFrom dplyr rows_patch filter mutate row_number
+#' @importFrom dplyr rows_patch filter mutate row_number %>%
 #' @export
 #' @examples
 #' relate <- read.csv("path/to/relatedness_matrix.csv", sep = ";", dec = ",")
