@@ -1,16 +1,12 @@
 ---
-output:
-  html_document: default
-  pdf_document: default
----
-title: "WolfPackR: Analyzing Wolf Pack Territories"  
+title: "WolfPackR: Analyzing Wolf Pack Territories"
 author: "Etienne Boncourt"  
 date: "`r Sys.Date()`"  
-output:  
-  rmarkdown::html_vignette:  
-    toc: true  
-toc_float: true
-
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{WolfPackR: Analyzing Wolf Pack Territories}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
