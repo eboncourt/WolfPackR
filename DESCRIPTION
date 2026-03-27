@@ -15,6 +15,7 @@ Imports:
     dplyr,
     igraph,
     leaflet,
+    magrittr,
     sf
 VignetteBuilder: knitr
 Suggests: knitr, rmarkdown
