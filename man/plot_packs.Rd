@@ -7,8 +7,9 @@
 plot_packs(obs, pack)
 }
 \arguments{
-  \item{obs}{An `sf` object with individuals and their packs.}
-  \item{pack}{The name of the column in `obs` that contains the pack information.}
+\item{obs}{An \code{sf} object with individuals and their packs.}
+
+\item{pack}{The name of the column in \code{obs} that contains the pack information.}
 }
 \value{
 An interactive leaflet map.
@@ -17,7 +18,6 @@ An interactive leaflet map.
 Creates an interactive map visualizing the packs territories.
 }
 \examples{
-# Example usage:
 map <- plot_packs(obs, pack = Pack)
 map
 }

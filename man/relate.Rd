@@ -20,5 +20,6 @@ relate
 }
 \description{
 Description.
+A data frame containing simulated pairwise relatedness estimators (in this case, Wang's estimator) for 9 individuals.
 }
 \keyword{datasets}

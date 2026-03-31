@@ -1,8 +1,4 @@
-# Charger les packages nécessaires
-library(testthat)
-library(WolfPackR)
-
-  # Créer un jeu de données fictif de relatedness
+# Create a sample dataset of relatedness
 create_fake_relate <- function() { data.frame(
     ind1 = c("W1", "W1", "W1", "W2", "W2", "W3"),
     ind2 = c("W1", "W2", "W3", "W2", "W3", "W3"),
@@ -10,8 +6,8 @@ create_fake_relate <- function() { data.frame(
   )
 }
 
-  # Test 1 : Cas nominal (succès)
-  test_that("genetic_groups retourne un data.frame avec des groupes", {
+# Test 1: Nominal case (success)
+test_that("genetic_groups retourne un data.frame avec des groupes", {
     relate <- create_fake_relate()
     result <- genetic_groups(relate, estimator = "indicator", threshold = 0.4)
     expect_is(result, "data.frame")
@@ -20,24 +16,25 @@ create_fake_relate <- function() { data.frame(
     expect_false(any(is.na(result$group)))
   })
 
-  # Test 2 : Ajout des diagonales
-  test_that("genetic_groups ajoute les diagonales à la matrice", {
+# Test 2: Adding diagonals
+test_that("genetic_groups ajoute les diagonales à la matrice", {
     relate <- create_fake_relate()
     result <- genetic_groups(relate, estimator = "indicator", threshold = 0.4)
     expect_equal(nrow(result), length(unique(c(relate$ind1, relate$ind2))))
   })
 
-  # Test 3 : Individus sans groupe
-  test_that("genetic_groups gère les individus sans groupe", {
+# Test 3: Individuals without a group
+test_that("genetic_groups gère les individus sans groupe", {
     relate <- create_fake_relate()
-    result <- genetic_groups(relate, estimator = "indicator", threshold = 0.5)
-    w5_group <- result$group[result$Individual == "W5"]
-    expect_true(length(unique(w5_group)) == 1)
-    expect_true(w5_group != result$group[result$Individual != "W5"])
+    result <- genetic_groups(relate, estimator = "indicator", threshold = 0.4)
+    w3_group <- result$group[result$Individual == "W3"]
+    no_w3_group <- result$group[result$Individual != "W3"]
+    expect_true(length(unique(w3_group)) == 1)
+    expect_false(w3_group %in% no_w3_group)
   })
 
-  # Test 4 : Application du seuil de relatedness
-  test_that("genetic_groups applique le seuil de relatedness", {
+# Test 4: Applying the relatedness threshold
+test_that("genetic_groups applique le seuil de relatedness", {
     relate <- create_fake_relate()
     result_low <- genetic_groups(relate, estimator = "indicator", threshold = 0.1)
     expect_true(length(unique(result_low$group)) < length(unique(result_low$Individual)))

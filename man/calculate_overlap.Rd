@@ -7,16 +7,19 @@
 calculate_overlap(mcp1, mcp2)
 }
 \arguments{
-  \item{mcp1}{The first polygon (sf object).}
-  \item{mcp2}{The second polygon (sf object).}
+\item{mcp1}{The first polygon (sf object).}
+
+\item{mcp2}{The second polygon (sf object).}
 }
 \value{
 A numeric value between 0 and 1 representing the overlap ratio.
 }
 \description{
-Calculates the overlap ratio between two polygons. It handles edge cases such as NULL inputs, empty intersections, and non-polygon geometries.
+This function calculates the overlap ratio between two polygons.
+It handles edge cases such as NULL inputs, empty intersections, and non-polygon geometries.
 }
 \examples{
 # Example usage:
 overlap_ratio <- calculate_overlap(mcp1 = polygon1, mcp2 = polygon2)
+
 }

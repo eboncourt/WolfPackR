@@ -16,6 +16,7 @@ Imports:
     igraph,
     leaflet,
     magrittr,
-    sf
+    sf,
+    WolfPackR
 VignetteBuilder: knitr
 Suggests: knitr, rmarkdown

@@ -20,5 +20,6 @@ samples
 }
 \description{
 Description.
+An sf object containing fictive individual names, sex and coordinates.
 }
 \keyword{datasets}

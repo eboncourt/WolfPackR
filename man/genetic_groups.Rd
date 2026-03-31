@@ -7,18 +7,19 @@
 genetic_groups(relate, estimator, threshold = 0.4)
 }
 \arguments{
-  \item{relate}{A data.frame with columns: `ind1`, `ind2`, and the estimator column. Based on the output format of the `coancestry` function of the `related` package.}
-  \item{estimator}{The name of the column in `relate` containing relatedness estimates.}
-  \item{threshold}{The minimum relatedness value to consider for grouping (default: 0.4).}
+\item{relate}{A data.frame with columns: \code{ind1}, \code{ind2}, and the estimator column. Based on the output format of the \code{coancestry} function of the \code{related} package (Pew et al., 2015).}
+
+\item{estimator}{The name of the column in \code{relate} containing relatedness estimates.}
+
+\item{threshold}{The minimum relatedness value to consider for grouping (default: 0.4).}
 }
 \value{
-A data.frame with individuals and their assigned genetic groups.
+An \code{sf} object with individuals and their assigned genetic groups.
 }
 \description{
 Identifies genetic groups from a pairwise relatedness matrix using a graph-based approach.
 }
 \examples{
-# Example usage:
 relate <- read.csv("path/to/relatedness_matrix.csv", sep = ";", dec = ",")
 obs <- genetic_groups(relate, "wang", 0.4)
 }
