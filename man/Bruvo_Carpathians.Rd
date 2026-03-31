@@ -20,6 +20,6 @@ Bruvo_Carpathians
 }
 \description{
 Description.
-A data frame containing pairwise relatedness estimators (1 - Bruvo distance) for 177 individuals. This dataset is derived from the work of Iosif, R., Skrbinšek, T., Erős, N., Konec, M., Boljte, B., Jan, M., & Promberger‐Fürpass, B. (2025). Wolf Population Size and Composition in One of Europe’s Strongholds, the Romanian Carpathians. Ecology and Evolution, 15(4), e71200. https://doi.org/10.1002/ece3.71200. Dataset reference: Foundation Conservation Carpathia. (2024). Wolf population size and composition in one of Europe’s strongholds, the Romanian Carpathians \link{Datasat}. Zenodo. https://doi.org/10.5281/ZENODO.14544266
+A data frame containing pairwise relatedness estimators (1 - Bruvo distance) for 177 individuals. This dataset is derived from the work of Iosif, R., Skrbinšek, T., Erős, N., Konec, M., Boljte, B., Jan, M., & Promberger‐Fürpass, B. (2025). Wolf Population Size and Composition in One of Europe’s Strongholds, the Romanian Carpathians. Ecology and Evolution, 15(4), e71200. https://doi.org/10.1002/ece3.71200. Dataset reference: Foundation Conservation Carpathia. (2024). Wolf population size and composition in one of Europe’s strongholds, the Romanian Carpathians (Dataset). Zenodo. https://doi.org/10.5281/ZENODO.14544266
 }
 \keyword{datasets}
