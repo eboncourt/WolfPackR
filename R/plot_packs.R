@@ -7,7 +7,18 @@
 #' @importFrom leaflet colorFactor addTiles addPolylines addPolygons fitBounds addCircleMarkers addLegend
 #' @export
 #' @examples
-#' map <- plot_packs(obs, pack = Pack)
+#' data(samples)
+#' samples$pack <- NA
+#' samples[samples$Individual == "W1",]$pack <- "1"
+#' samples[samples$Individual == "W2",]$pack <- "1"
+#' samples[samples$Individual == "W3",]$pack <- "1"
+#' samples[samples$Individual == "W4",]$pack <- "Lone Individual"
+#' samples[samples$Individual == "W5",]$pack <- "2"
+#' samples[samples$Individual == "W6",]$pack <- "3"
+#' samples[samples$Individual == "W7",]$pack <- "2"
+#' samples[samples$Individual == "W8",]$pack <- "2"
+#' samples[samples$Individual == "W9",]$pack <- "3"
+#' map <- plot_packs(samples, pack = pack)
 #' map
 plot_packs <- function(obs, pack) {
   pack_name <- deparse(substitute(pack))

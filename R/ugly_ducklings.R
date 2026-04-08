@@ -10,6 +10,10 @@
 #' @importFrom dplyr filter
 #' @export
 #' @examples
+#' data("relate")
+#' data("samples")
+#' gengroups <- genetic_groups(relate, threshold = 0.4, estimator = "wang")
+#' obs <- merge(samples, gengroups, by = "Individual")
 #' ud_df <- ugly_ducklings(obs, group, min_overlap = 0.5, buffer = 1000, mcp.percent = 95)
 
 ugly_ducklings <- function(obs, group, min_overlap = 0.5, buffer = 0, mcp.percent = 100) {

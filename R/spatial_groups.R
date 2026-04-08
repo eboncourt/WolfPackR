@@ -9,11 +9,8 @@
 #' @return A data.frame with updated subgroup assignments.
 #' @examples
 #' # Example usage:
-#' obs_sf <- st_as_sf(obs, coords = c("Longitude", "Latitude"), crs = 4326)
-#' subgroups_result <- spatial_groups(obs = obs_sf, group = "genetic_group", percentile = 95, buffer_radius = 1000, min_mcp_overlap = 0.2)
-#' # Without group
-#' subgroups_result <- spatial_groups(obs = obs_sf, percentile = 95, buffer_radius = 1000, min_mcp_overlap = 0.1)
-#'
+#' data("samples")
+#' subgroups_result <-  spatial_groups(samples, percentile = 100, buffer_radius = 0.00001, max_iterations = 20, min_mcp_overlap = 0.5)
 #' @export
 spatial_groups <- function(obs, group = NULL, percentile = 100, buffer_radius = 1, max_iterations = 20, min_mcp_overlap = 0.5) {
   # Initialize results
@@ -23,7 +20,7 @@ spatial_groups <- function(obs, group = NULL, percentile = 100, buffer_radius = 
     Subgroup = "All_Individuals",
     stringsAsFactors = FALSE
   )
-  
+
   # If group is provided, use it; otherwise, treat all individuals as a single group
   if (!is.null(group)) {
     group_name <- group
@@ -39,50 +36,50 @@ spatial_groups <- function(obs, group = NULL, percentile = 100, buffer_radius = 
     } else {
       group_obs <- obs
     }
-    
+
     group_individuals <- unique(group_obs$Individual)
-    
+
     # Calculate initial MCP for the group
     mcp_group <- mcp_sf(group_obs, percentile, buffer_radius)
-    
+
     # If the MCP cannot be calculated, all individuals are marked as "Lone Individual"
     if (is.null(mcp_group)) {
       results$Subgroup[results$Individual %in% group_individuals] <- "Lone Individual"
       next
     }
-    
+
     # Identify spatial subgroups
     subgroups_list <- list(group_individuals)
     subgroup_mcps <- list(mcp_group)
-    
+
     stable <- FALSE
     iteration <- 0
-    
+
     while (!stable && iteration < max_iterations) {
-      
+
       stable <- TRUE
       new_subgroups <- list()
       new_subgroup_mcps <- list()
-      
+
       # For each existing subgroup
       for (i in seq_along(subgroups_list)) {
         current_subgroup <- subgroups_list[[i]]
         current_mcp <- if (i <= length(subgroup_mcps)) subgroup_mcps[[i]] else NULL
-        
+
         # If the subgroup has fewer than 3 individuals, keep it as is.
         if (length(current_subgroup) < 3) {
           new_subgroups <- c(new_subgroups, list(current_subgroup))
           new_subgroup_mcps <- c(new_subgroup_mcps, list(current_mcp))
           next
         }
-        
+
         # Calculation of individual MCPs
         individual_mcps <- lapply(current_subgroup, function(ind) {
           ind_obs <- obs %>% dplyr::filter(Individual == ind)
           mcp_sf(ind_obs, percentile, buffer_radius)
         })
         names(individual_mcps) <- current_subgroup
-        
+
         # Calculation of the overlap matrix
         overlap_matrix <- matrix(0, nrow = length(current_subgroup), ncol = length(current_subgroup))
         for (j in seq_along(current_subgroup)) {
@@ -97,12 +94,12 @@ spatial_groups <- function(obs, group = NULL, percentile = 100, buffer_radius = 
             }
           }
         }
-        
+
         # Clustering of individuals
         diag(overlap_matrix) <- 1
         graph <- igraph::graph_from_adjacency_matrix(overlap_matrix, weighted = TRUE, mode = "undirected", diag = FALSE)
         clusters <- igraph::components(graph)
-        
+
         # Creation of new subgroups
         for (cluster_id in unique(clusters$membership)) {
           cluster_members <- current_subgroup[clusters$membership == cluster_id]
@@ -111,7 +108,7 @@ spatial_groups <- function(obs, group = NULL, percentile = 100, buffer_radius = 
           new_subgroup_mcps <- c(new_subgroup_mcps, list(new_mcp))
         }
       }
-      
+
       # Stability check
       same_groups <- length(new_subgroups) == length(subgroups_list)
       if (same_groups) {
@@ -123,13 +120,13 @@ spatial_groups <- function(obs, group = NULL, percentile = 100, buffer_radius = 
         }
       }
       stable <- same_groups
-      
+
       # Updating subgroups
       subgroups_list <- new_subgroups
       subgroup_mcps <- new_subgroup_mcps
       iteration <- iteration + 1
     }
-    
+
     # Assign spatial subgroups to results
     for (i in seq_along(subgroups_list)) {
       if (length(subgroups_list[[i]]) >= 2) {
@@ -143,6 +140,6 @@ spatial_groups <- function(obs, group = NULL, percentile = 100, buffer_radius = 
       }
     }
   }
-  
+
   return(results)
 }

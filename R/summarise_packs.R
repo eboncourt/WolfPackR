@@ -10,7 +10,27 @@
 #' @importFrom sf st_convex_hull st_union st_area
 #' @export
 #' @examples
-#' summary <- summarise_packs(obs, pack = Pack)
+#' data(samples)
+#' samples$pack <- NA
+#' samples[samples$Individual == "W1",]$pack <- "1"
+#' samples[samples$Individual == "W2",]$pack <- "1"
+#' samples[samples$Individual == "W3",]$pack <- "1"
+#' samples[samples$Individual == "W4",]$pack <- "Lone Individual"
+#' samples[samples$Individual == "W5",]$pack <- "2"
+#' samples[samples$Individual == "W6",]$pack <- "3"
+#' samples[samples$Individual == "W7",]$pack <- "2"
+#' samples[samples$Individual == "W8",]$pack <- "2"
+#' samples[samples$Individual == "W9",]$pack <- "3"
+#' samples[samples$Individual == "W1",]$Individual <- "M1"
+#' samples[samples$Individual == "W2",]$Individual <- "M2"
+#' samples[samples$Individual == "W3",]$Individual <- "M3"
+#' samples[samples$Individual == "W4",]$Individual <- "M4"
+#' samples[samples$Individual == "W5",]$Individual <- "F1"
+#' samples[samples$Individual == "W6",]$Individual <- "F2"
+#' samples[samples$Individual == "W7",]$Individual <- "F3"
+#' samples[samples$Individual == "W8",]$Individual <- "F4"
+#' samples[samples$Individual == "W9",]$Individual <- "F5"
+#' summary <- summarise_packs(samples, pack, male_pattern = "M", female_pattern = "F")
 summarise_packs <- function(obs, pack, sex_column = "Sex", male_pattern = "M", female_pattern = "F") {
   pack_name <- deparse(substitute(pack))
 

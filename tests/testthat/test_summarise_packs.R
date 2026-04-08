@@ -29,7 +29,7 @@ obs2[obs2$Individual == "W7",]$Individual <- "F3"
 obs2[obs2$Individual == "W8",]$Individual <- "F4"
 obs2[obs2$Individual == "W9",]$Individual <- "F5"
 
-result2 <- summarise_packs(obs2, group, sex_column = "Sex", male_pattern = "M", female_pattern = "F")
+result2 <- summarise_packs(obs2, group, male_pattern = "M", female_pattern = "F")
 test_that("summarise_packs returns a list with statistics by group", {
 
   expect_is(result2, "list")
