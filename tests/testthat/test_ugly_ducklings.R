@@ -1,4 +1,4 @@
-testthat::test_that("ugly_ducklings misclassified individuals", {
+test_that("ugly_ducklings misclassified individuals", {
 
   # Load data
   data("relate")
@@ -11,8 +11,8 @@ testthat::test_that("ugly_ducklings misclassified individuals", {
   # Execute the function
   result <- ugly_ducklings(obs, group = group, min_overlap = 0.7, buffer = 0, mcp.percent = 100)
 
-  # Tests
-  testthat::expect_is(result, "data.frame")
-  testthat::expect_true("new_group" %in% names(result))
-  testthat::expect_equal(nrow(result), length(unique(samples$Individual)))
+  # Tests with testthat
+  expect_is(result, "data.frame")
+  expect_true("new_group" %in% names(result))
+  expect_equal(nrow(result), length(unique(samples$Individual)))
 })

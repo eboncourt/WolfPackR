@@ -1,4 +1,4 @@
-testthat::test_that("plot_packs retourne un objet ggplot", {
+test_that("plot_packs retourne un objet ggplot", {
 
   # Load data
   data("relate")
@@ -12,6 +12,6 @@ testthat::test_that("plot_packs retourne un objet ggplot", {
 
   plot_result <- plot_packs(obs, group)
 
-  # Tests
-  testthat::expect_is(plot_result, "leaflet")  # The result is a leaflet object
+  # Tests with testthat
+  expect_is(plot_result, "leaflet")  # The result is a leaflet object
 })

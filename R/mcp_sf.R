@@ -20,24 +20,24 @@ mcp_sf <- function(data, percentile=100, buffer_radius=0.01){
 
   if (nrow(data) == 2) {
     warning(paste("Insufficient points (", nrow(data), ") to calculate MCP. Use of a buffer."))
-    return(st_buffer(st_linestring(st_coordinates(data)), buffer_radius))
+    return(st_geometry(st_buffer(st_linestring(st_coordinates(data)), buffer_radius)))
   }
 
   if (nrow(data) == 1) {
     warning(paste("Insufficient points (", nrow(data), ") to calculate MCP. Use of a buffer."))
-    return(st_buffer(data, buffer_radius))
+    return(st_geometry(st_buffer(data, buffer_radius)))
   }
-  
+
   centroid <- st_centroid(st_union(data))
   dist <- as.numeric(st_distance(data, centroid))
   within_percentile_range <- dist <= quantile(dist, percentile/100)
 
-  if (length(data[within_percentile_range,]) < 3) {
+  if (nrow(data[within_percentile_range,]) < 3) {
     warning(paste("Insufficient points (", length(data[within_percentile_range,]), ") after filtering by percentile to calculate MCP. Minimum required: 3"))
       if (length(data[within_percentile_range,]) == 2) {
       return(st_buffer(st_linestring(st_coordinates(data[within_percentile_range,])), buffer_radius))
     }
-  if (length(data[within_percentile_range,]) == 1) {
+  if (nrow(data[within_percentile_range,]) == 1) {
       return(st_buffer(data[within_percentile_range,], buffer_radius))
     }
   }

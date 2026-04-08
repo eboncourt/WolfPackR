@@ -1,2 +1,3 @@
 library(testthat)
-library(WolfPackR)
+
+test_check("WolfPackR")
