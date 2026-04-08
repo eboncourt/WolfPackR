@@ -16,7 +16,7 @@ summarise_packs <- function(obs, pack, sex_column = "Sex", male_pattern = "M", f
 
   # Vérifier que la colonne pack existe
   if (!pack_name %in% names(obs)) {
-    stop(paste("La colonne", pack_name, "n'existe pas dans les données."))
+    stop(paste("Column", pack_name, "doesn't exist."))
   }
 
   # Count the number of points per individual directly from obs
@@ -55,8 +55,8 @@ summarise_packs <- function(obs, pack, sex_column = "Sex", male_pattern = "M", f
       # Check if sex information is available in obs
       if (sex_column %in% colnames(obs)) {
         pack_obs <- obs[obs$Individual %in% individual_names, ]
-        males <- pack_obs[pack_obs[[sex_column]] == "M", ]
-        females <- pack_obs[pack_obs[[sex_column]] == "F", ]
+        males <- pack_obs[pack_obs[[sex_column]] == male_pattern, ]
+        females <- pack_obs[pack_obs[[sex_column]] == female_pattern, ]
 
         if (nrow(males) > 0) {
           male_point_counts <- point_counts[point_counts$Individual %in% males$Individual, ]

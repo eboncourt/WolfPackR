@@ -35,10 +35,10 @@ mcp_sf <- function(data, percentile=100, buffer_radius=0.01){
   if (nrow(data[within_percentile_range,]) < 3) {
     warning(paste("Insufficient points (", length(data[within_percentile_range,]), ") after filtering by percentile to calculate MCP. Minimum required: 3"))
       if (length(data[within_percentile_range,]) == 2) {
-      return(st_buffer(st_linestring(st_coordinates(data[within_percentile_range,])), buffer_radius))
+      return(st_geometry(st_buffer(st_linestring(st_coordinates(data[within_percentile_range,])), buffer_radius)))
     }
   if (nrow(data[within_percentile_range,]) == 1) {
-      return(st_buffer(data[within_percentile_range,], buffer_radius))
+      return(st_geometry(st_buffer(data[within_percentile_range,], buffer_radius)))
     }
   }
 

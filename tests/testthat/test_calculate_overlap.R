@@ -18,3 +18,11 @@ test_that("calculate_overlap returns 0 if no overlapping", {
   expect_true(result == 0)
 })
 
+
+test_that("calculate_overlap returns 0 if one polygon is null", {
+  mcp1 <- st_as_sfc(st_bbox(c(xmin = 0, ymin = 0, xmax = 2, ymax = 2), crs = 4326))
+  mcp2 <- NULL
+
+  result <- calculate_overlap(mcp1, mcp2)
+  expect_true(result == 0)
+})
