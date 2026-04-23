@@ -8,6 +8,7 @@ jobs:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
     strategy:
       fail-fast: false
       matrix:
@@ -42,13 +43,17 @@ jobs:
       - name: Install system dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
-          # Installer Rtools (nécessaire pour compiler les packages R sur Windows)
           choco install rtools -y
         shell: cmd
 
+      # Installer les dépendances R (sans essayer d'installer WolfPackR)
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck
           needs: check
+          packages: |
+            deps::.
+            any::sessioninfo
 
+      # Exécuter R CMD check
       - uses: r-lib/actions/check-r-package@v2
