@@ -4,7 +4,7 @@ Version: 0.92
 Authors@R: 
     person("Etienne", "Boncourt", , "etienne.boncourt@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-8233-0190"))
-Description: WolfPackR is an R package designed to identify and analyze wolf pack structures by integrating genetic relatedness and spatial data. Using a relatedness estimator, it constructs genetic networks to define potential packs, then refines these groups by calculating Minimum Convex Polygons (MCPs) to account for spatial territory overlap. The package identifies "lone individuals" (genetically or spatially isolated) and "ugly ducklings" (genetically linked but spatially disconnected), allowing for a nuanced understanding of pack dynamics. WolfPackR leverages igraph for network analysis, sf for spatial operations, and ggplot2/leaflet for visualization, making it a comprehensive tool for ecologists studying social structures in wolf populations.
+Description: WolfPackR is an R package designed to identify and analyze wolf pack structures by integrating genetic relatedness and spatial data. Using a relatedness estimator, it constructs genetic networks and identifies pack structures based on spatial proximity.
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -16,5 +16,5 @@ Imports:
     igraph,
     leaflet,
     sf
-VignetteBuilder: knitr
 Suggests: knitr, rmarkdown
+VignetteBuilder: knitr
