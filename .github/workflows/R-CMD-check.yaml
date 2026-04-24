@@ -60,8 +60,7 @@ jobs:
         run: |
           desc <- read.dcf("DESCRIPTION")
           original_name <- as.character(desc[1, "Package"])
-          writeLines(paste0("ORIGINAL_NAME=", original_name), "original_name.txt")
-          writeLines(paste0("ORIGINAL_NAME=", original_name), Sys.getenv("GITHUB_ENV"), append = TRUE)
+          cat(paste0("ORIGINAL_NAME=", original_name, "\n"), file = Sys.getenv("GITHUB_ENV"), append = TRUE)
 
           # Renommer le package
           desc[1, "Package"] <- paste0(original_name, "_temp")
