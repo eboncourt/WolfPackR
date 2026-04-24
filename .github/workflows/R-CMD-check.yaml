@@ -48,15 +48,27 @@ jobs:
           choco install rtools -y
         shell: cmd
 
-      # Installer les dépendances R manuellement
+      # Installer les dépendances R
       - name: Install R dependencies
         run: |
           install.packages(c("remotes", "rcmdcheck"))
           remotes::install_deps(dependencies = TRUE)
-          remotes::install_local(upgrade = "never")
         shell: Rscript {0}
 
-      # Exécuter R CMD check avec des options strictes
+      # Renommer temporairement le package
+      - name: Rename package temporarily
+        run: |
+          # Sauvegarder le nom original
+          original_name <- read.dcf("DESCRIPTION")$Package
+          writeLines(paste0("ORIGINAL_PACKAGE_NAME=", original_name), "original_name.txt")
+
+          # Renommer le package
+          desc <- read.dcf("DESCRIPTION")
+          desc$Package <- paste0(desc$Package, "_temp")
+          write.dcf(desc, "DESCRIPTION")
+        shell: Rscript {0}
+
+      # Exécuter R CMD check
       - name: Run R CMD check
         run: |
           options(crayon.enabled = FALSE)
@@ -69,3 +81,16 @@ jobs:
         env:
           _R_CHECK_VIGNETTES_: false
           _R_CHECK_FORCE_SUGGESTS_: false
+
+      # Restaurer le nom original
+      - name: Restore original package name
+        if: always()
+        run: |
+          original_name <- readLines("original_name.txt")
+          original_name <- sub("ORIGINAL_PACKAGE_NAME=", "", original_name)
+
+          # Restaurer le nom original
+          desc <- read.dcf("DESCRIPTION")
+          desc$Package <- original_name
+          write.dcf(desc, "DESCRIPTION")
+        shell: Rscript {0}
