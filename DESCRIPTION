@@ -12,6 +12,7 @@ RoxygenNote: 7.3.3
 URL: https://github.com/eboncourt/WolfPackR
 BugReports: https://github.com/eboncourt/WolfPackR/issues
 Imports: 
+    R (>= 3.5.0),
     dplyr,
     igraph,
     leaflet,
