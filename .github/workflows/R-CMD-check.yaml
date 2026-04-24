@@ -63,8 +63,8 @@ jobs:
           cat(paste0("ORIGINAL_NAME=", original_name, "\n"), file = Sys.getenv("GITHUB_ENV"), append = TRUE)
 
           # Renommer le package
-          desc[1, "Package"] <- paste0(original_name, "_temp")
-          write.dcf(desc, "DESCRIPTION")
+            desc[1, "Package"] <- paste0(original_name, ".temp")
+            write.dcf(desc, "DESCRIPTION")
         shell: Rscript {0}
 
       # Exécuter R CMD check
