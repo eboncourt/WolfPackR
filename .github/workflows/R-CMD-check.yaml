@@ -48,7 +48,7 @@ jobs:
           choco install rtools -y
         shell: cmd
 
-      # Installer les dépendances R, y compris testthat
+      # Installer les dépendances R
       - name: Install R dependencies
         run: |
           install.packages(c("remotes", "rcmdcheck", "testthat", "covr"))
