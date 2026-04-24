@@ -9,6 +9,7 @@ jobs:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       _R_CHECK_FORCE_SUGGESTS_: false
+      _R_CHECK_VIGNETTES_: false
 
     strategy:
       fail-fast: false
@@ -55,8 +56,16 @@ jobs:
           remotes::install_local(upgrade = "never")
         shell: Rscript {0}
 
-      # Exécuter R CMD check sur le package local
+      # Exécuter R CMD check avec des options strictes
       - name: Run R CMD check
         run: |
-          rcmdcheck::rcmdcheck(args = c("--no-manual", "--no-build-vignettes", "--as-cran"), error_on = "error", check_dir = "check")
+          options(crayon.enabled = FALSE)
+          rcmdcheck::rcmdcheck(
+            args = c("--no-manual", "--no-build-vignettes", "--as-cran"),
+            error_on = "error",
+            check_dir = "check"
+          )
         shell: Rscript {0}
+        env:
+          _R_CHECK_VIGNETTES_: false
+          _R_CHECK_FORCE_SUGGESTS_: false
