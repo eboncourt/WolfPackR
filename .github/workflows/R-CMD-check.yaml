@@ -46,16 +46,14 @@ jobs:
           choco install rtools -y
         shell: cmd
 
-      # Installer les dépendances R (sans WolfPackR)
+      # Installer les dépendances R sans utiliser de lockfile
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck
           needs: check
           packages: |
             deps::.
-            any::sessioninfo
+          cache: false
 
       # Exécuter R CMD check sur le package local
       - uses: r-lib/actions/check-r-package@v2
-        with:
-          args: "--no-manual"
