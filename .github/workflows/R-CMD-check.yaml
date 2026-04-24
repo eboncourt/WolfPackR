@@ -51,7 +51,10 @@ jobs:
       # Installer les dépendances R
       - name: Install R dependencies
         run: |
+          options(repos = c(CRAN = "https://cloud.r-project.org/"))
           install.packages(c("remotes", "rcmdcheck", "testthat", "covr"))
+          # Installer leaflet depuis les binaires CRAN
+          install.packages("leaflet", type = "binary")
           remotes::install_deps(dependencies = TRUE)
           remotes::install_local(upgrade = "never")
         shell: Rscript {0}
