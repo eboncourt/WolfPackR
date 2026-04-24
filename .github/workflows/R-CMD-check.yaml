@@ -55,12 +55,12 @@ jobs:
           remotes::install_deps(dependencies = TRUE)
         shell: Rscript {0}
 
-      # Renommer temporairement le package
+      # Renommer temporairement le package et stocker le nom original dans une variable d'environnement
       - name: Rename package temporarily
+        id: rename_package
         run: |
-          # Sauvegarder le nom original
           original_name <- read.dcf("DESCRIPTION")$Package
-          writeLines(paste0("ORIGINAL_PACKAGE_NAME=", original_name), "original_name.txt")
+          echo "ORIGINAL_NAME=$original_name" >> $GITHUB_ENV
 
           # Renommer le package
           desc <- read.dcf("DESCRIPTION")
@@ -86,11 +86,7 @@ jobs:
       - name: Restore original package name
         if: always()
         run: |
-          original_name <- readLines("original_name.txt")
-          original_name <- sub("ORIGINAL_PACKAGE_NAME=", "", original_name)
-
-          # Restaurer le nom original
           desc <- read.dcf("DESCRIPTION")
-          desc$Package <- original_name
+          desc$Package <- Sys.getenv("ORIGINAL_NAME")
           write.dcf(desc, "DESCRIPTION")
         shell: Rscript {0}
