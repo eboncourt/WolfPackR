@@ -15,7 +15,6 @@ Imports:
     dplyr,
     igraph,
     leaflet,
-    magrittr,
     sf,
     WolfPackR
 VignetteBuilder: knitr
