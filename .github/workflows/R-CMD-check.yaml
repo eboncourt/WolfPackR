@@ -46,7 +46,7 @@ jobs:
           choco install rtools -y
         shell: cmd
 
-      # Installer les dépendances R (sans essayer d'installer WolfPackR)
+      # Installer les dépendances R (sans WolfPackR)
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck
@@ -55,5 +55,7 @@ jobs:
             deps::.
             any::sessioninfo
 
-      # Exécuter R CMD check
+      # Exécuter R CMD check sur le package local
       - uses: r-lib/actions/check-r-package@v2
+        with:
+          args: "--no-manual"
