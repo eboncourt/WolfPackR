@@ -28,20 +28,18 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@v2
 
-      # Installer les dépendances système sur Ubuntu
+      # Installer les dépendances système
       - name: Install system dependencies (Ubuntu)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libudunits2-dev libgdal-dev libgeos-dev libproj-dev libssl-dev libcurl4-openssl-dev
 
-      # Installer les dépendances système sur macOS
       - name: Install system dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
           brew install udunits gdal geos proj libgit2
 
-      # Installer les dépendances système sur Windows
       - name: Install system dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
@@ -55,19 +53,7 @@ jobs:
           remotes::install_deps(dependencies = TRUE)
         shell: Rscript {0}
 
-      # Renommer temporairement le package
-      - name: Rename package temporarily
-        run: |
-          desc <- read.dcf("DESCRIPTION")
-          original_name <- as.character(desc[1, "Package"])
-          cat(paste0("ORIGINAL_NAME=", original_name, "\n"), file = Sys.getenv("GITHUB_ENV"), append = TRUE)
-
-          # Renommer le package
-            desc[1, "Package"] <- paste0(original_name, ".temp")
-            write.dcf(desc, "DESCRIPTION")
-        shell: Rscript {0}
-
-      # Exécuter R CMD check
+      # Exécuter R CMD check directement sans renommage
       - name: Run R CMD check
         run: |
           options(crayon.enabled = FALSE)
@@ -80,13 +66,3 @@ jobs:
         env:
           _R_CHECK_VIGNETTES_: false
           _R_CHECK_FORCE_SUGGESTS_: false
-
-      # Restaurer le nom original
-      - name: Restore original package name
-        if: always()
-        run: |
-          desc <- read.dcf("DESCRIPTION")
-          original_name <- Sys.getenv("ORIGINAL_NAME")
-          desc[1, "Package"] <- original_name
-          write.dcf(desc, "DESCRIPTION")
-        shell: Rscript {0}
