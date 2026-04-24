@@ -4,7 +4,7 @@
 #' @param estimator The name of the column in `relate` containing relatedness estimates.
 #' @param threshold The minimum relatedness value to consider for grouping (default: 0.4).
 #' @return An `sf` object with individuals and their assigned genetic groups.
-#' @importFrom igraph graph_from_adjacency_matrix plot.graph components
+#' @importFrom igraph graph_from_adjacency_matrix plot.igraph components
 #' @importFrom dplyr rows_patch filter mutate row_number %>% select
 #' @export
 #' @examples

@@ -20,6 +20,7 @@ An \code{sf} object representing the MCP, or \code{NULL} if insufficient points.
 Computes the MCP for a set of spatial points using \code{sf}, with an option to exclude points beyond a given percentile of distance from the centroid. Largely inspired by juoe (https://rdrr.io/github/juoe/sdmflow/).
 }
 \examples{
-obs_i <- subset(obs, group == 1)
-mcp_i <- mcp_sf(obs_i, percentile = 95)
+obs <- data.frame(X = c(1,2,2,5,5,6,7,8,9), Y = c(1,2,9,4,5,6,1,8,9))
+obs_sf <- st_as_sf(obs, coords = c("X", "Y"))
+mcp_sf(obs_sf, percentile=100, buffer_radius=0.01)
 }

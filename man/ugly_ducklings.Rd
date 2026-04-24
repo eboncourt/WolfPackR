@@ -24,5 +24,9 @@ A data.frame containing all individuals, their genetic group, and their assigned
 Finds individuals that are genetically linked but spatially isolated, and assigns them to the most suitable pack.
 }
 \examples{
+data("relate")
+data("samples")
+gengroups <- genetic_groups(relate, threshold = 0.4, estimator = "wang")
+obs <- merge(samples, gengroups, by = "Individual")
 ud_df <- ugly_ducklings(obs, group, min_overlap = 0.5, buffer = 1000, mcp.percent = 95)
 }

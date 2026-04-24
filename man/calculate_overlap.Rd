@@ -20,6 +20,8 @@ It handles edge cases such as NULL inputs, empty intersections, and non-polygon 
 }
 \examples{
 # Example usage:
+mcp1 <- st_as_sfc(st_bbox(c(xmin = 0, ymin = 0, xmax = 5, ymax = 5), crs = 4326))
+mcp2 <- st_as_sfc(st_bbox(c(xmin = 4, ymin = 4, xmax = 9, ymax = 9), crs = 4326))
 overlap_ratio <- calculate_overlap(mcp1 = polygon1, mcp2 = polygon2)
 
 }

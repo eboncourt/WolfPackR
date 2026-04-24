@@ -20,6 +20,6 @@ An \code{sf} object with individuals and their assigned genetic groups.
 Identifies genetic groups from a pairwise relatedness matrix using a graph-based approach.
 }
 \examples{
-relate <- read.csv("path/to/relatedness_matrix.csv", sep = ";", dec = ",")
-obs <- genetic_groups(relate, "wang", 0.4)
+relate <- data.frame(ind1 = c("W1", "W1", "W1", "W2", "W2", "W3"), ind2 = c("W1", "W2", "W3", "W2", "W3", "W3"), indicator = c(1.0, 0.5, 0.2, 1.0, 0.3, 1.0))
+result <- genetic_groups(relate, estimator = "indicator", threshold = 0.4)
 }

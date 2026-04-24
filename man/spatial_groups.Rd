@@ -34,9 +34,6 @@ This function identifies spatial groups or subgroups within groups using Minimum
 }
 \examples{
 # Example usage:
-obs_sf <- st_as_sf(obs, coords = c("Longitude", "Latitude"), crs = 4326)
-subgroups_result <- spatial_groups(obs = obs_sf, group = "genetic_group", percentile = 95, buffer_radius = 1000, min_mcp_overlap = 0.2)
-# Without group
-subgroups_result <- spatial_groups(obs = obs_sf, percentile = 95, buffer_radius = 1000, min_mcp_overlap = 0.1)
-
+data("samples")
+subgroups_result <-  spatial_groups(samples, percentile = 100, buffer_radius = 0.00001, max_iterations = 20, min_mcp_overlap = 0.5)
 }

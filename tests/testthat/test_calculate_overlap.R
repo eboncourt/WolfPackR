@@ -1,4 +1,4 @@
-
+library(sf)
 test_that("calculate_overlap returns an overlapping value between 0 and 1", {
   mcp1 <- st_as_sfc(st_bbox(c(xmin = 0, ymin = 0, xmax = 5, ymax = 5), crs = 4326))
   mcp2 <- st_as_sfc(st_bbox(c(xmin = 4, ymin = 4, xmax = 9, ymax = 9), crs = 4326))
