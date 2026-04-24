@@ -21,6 +21,6 @@ Computes the MCP for a set of spatial points using \code{sf}, with an option to 
 }
 \examples{
 obs <- data.frame(X = c(1,2,2,5,5,6,7,8,9), Y = c(1,2,9,4,5,6,1,8,9))
-obs_sf <- st_as_sf(obs, coords = c("X", "Y"))
+obs_sf <- sf::st_as_sf(obs, coords = c("X", "Y"))
 mcp_sf(obs_sf, percentile=100, buffer_radius=0.01)
 }
