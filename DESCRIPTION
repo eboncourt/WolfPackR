@@ -16,5 +16,5 @@ Imports:
     igraph,
     leaflet,
     sf
-Suggests: knitr, rmarkdown
+Suggests: knitr, rmarkdown, testthat, covr
 VignetteBuilder: knitr
