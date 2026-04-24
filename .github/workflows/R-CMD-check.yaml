@@ -57,11 +57,11 @@ jobs:
 
       # Renommer temporairement le package
       - name: Rename package temporarily
-        id: rename_package
         run: |
           desc <- read.dcf("DESCRIPTION")
           original_name <- as.character(desc[1, "Package"])
-          echo "ORIGINAL_NAME=$original_name" >> $GITHUB_ENV
+          writeLines(paste0("ORIGINAL_NAME=", original_name), "original_name.txt")
+          writeLines(paste0("ORIGINAL_NAME=", original_name), Sys.getenv("GITHUB_ENV"), append = TRUE)
 
           # Renommer le package
           desc[1, "Package"] <- paste0(original_name, "_temp")
@@ -87,6 +87,7 @@ jobs:
         if: always()
         run: |
           desc <- read.dcf("DESCRIPTION")
-          desc[1, "Package"] <- Sys.getenv("ORIGINAL_NAME")
+          original_name <- Sys.getenv("ORIGINAL_NAME")
+          desc[1, "Package"] <- original_name
           write.dcf(desc, "DESCRIPTION")
         shell: Rscript {0}
