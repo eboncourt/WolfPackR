@@ -33,7 +33,9 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libudunits2-dev libgdal-dev libgeos-dev libproj-dev libssl-dev libcurl4-openssl-dev libharfbuzz-dev libfribidi-dev libfontconfig1-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev
+          sudo apt-get install -y libudunits2-dev libgdal-dev libgeos-dev libproj-dev libssl-dev libcurl4-openssl-dev \
+          libharfbuzz-dev libfribidi-dev libfontconfig1-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev \
+          libxml2-dev libssl-dev libgit2-dev default-jdk libv8-dev
 
       # Installer les dépendances système sur macOS
       - name: Install system dependencies (macOS)
@@ -52,9 +54,8 @@ jobs:
       - name: Install R dependencies
         run: |
           options(repos = c(CRAN = "https://cloud.r-project.org/"))
-          install.packages(c("remotes", "rcmdcheck", "testthat", "covr"))
-          # Installer leaflet depuis les binaires CRAN
-          install.packages("leaflet", type = "binary")
+          install.packages("remotes")
+          remotes::install_cran(c("rcmdcheck", "testthat", "covr", "leaflet", "pkgload", "fs"))
           remotes::install_deps(dependencies = TRUE)
           remotes::install_local(upgrade = "never")
         shell: Rscript {0}
