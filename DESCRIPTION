@@ -1,10 +1,10 @@
-Package: WolfPackR
+Package: wolfpackr
 Title: Identifies wolf packs based on genetic and spatial data
 Version: 0.9.2
 Authors@R: 
     person("Etienne", "Boncourt", , "etienne.boncourt@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-8233-0190"))
-Description: WolfPackR is an R package designed to identify and analyze wolf pack structures by integrating genetic relatedness and spatial data. Using a relatedness estimator, it constructs genetic networks and identifies pack structures based on spatial proximity.
+Description: WolfPackR is an R package designed to identify and analyze wolf pack structures by integrating genetic relatedness and spatial data. Using a relatedness estimator, it constructs geneti[...]
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
