@@ -3,10 +3,10 @@
 #' @param obs An `sf` object with individuals and their packs.
 #' @param pack The name of the column in `obs` that contains the pack information.
 #' @param sex_column The name of the column in obs that contains sex information (default: "Sex").
-#' @param male_pattern A regex pattern to identify males in Individual IDs (default: "M").
-#' @param female_pattern A regex pattern to identify females in Individual IDs (default: "F").
+#' @param male_pattern A regex pattern to identify males, matched against `sex_column` if it exists, otherwise against Individual IDs (default: "M"). Anchor it when needed, e.g. "^M" for a sex column or "_M$" for IDs ending in "_M".
+#' @param female_pattern A regex pattern to identify females, matched the same way as `male_pattern` (default: "F").
 #' @return A list containing detailed summaries of packs and individuals.
-#' @importFrom dplyr filter
+#' @importFrom dplyr filter .data
 #' @importFrom sf st_convex_hull st_union st_area
 #' @export
 #' @examples
@@ -75,8 +75,9 @@ summarise_packs <- function(obs, pack, sex_column = "Sex", male_pattern = "M", f
       # Check if sex information is available in obs
       if (sex_column %in% colnames(obs)) {
         pack_obs <- obs[obs$Individual %in% individual_names, ]
-        males <- pack_obs[pack_obs[[sex_column]] == male_pattern, ]
-        females <- pack_obs[pack_obs[[sex_column]] == female_pattern, ]
+        # Patterns are regex, same as for IDs below (an exact == silently found nothing with "M" vs "Male")
+        males <- pack_obs[grepl(male_pattern, pack_obs[[sex_column]]), ]
+        females <- pack_obs[grepl(female_pattern, pack_obs[[sex_column]]), ]
 
         if (nrow(males) > 0) {
           male_point_counts <- point_counts[point_counts$Individual %in% males$Individual, ]
