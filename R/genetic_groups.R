@@ -5,7 +5,8 @@
 #' @param threshold The minimum relatedness value to consider for grouping (default: 0.4).
 #' @return An `sf` object with individuals and their assigned genetic groups.
 #' @importFrom igraph graph_from_adjacency_matrix plot.igraph components
-#' @importFrom dplyr rows_patch filter mutate row_number %>% select
+#' @importFrom dplyr rows_patch filter mutate row_number %>% select across .data
+#' @importFrom stats xtabs
 #' @export
 #' @examples
 #' relate <- data.frame(ind1 = c("W1", "W1", "W1", "W2", "W2", "W3"), ind2 = c("W1", "W2", "W3", "W2", "W3", "W3"), indicator = c(1.0, 0.5, 0.2, 1.0, 0.3, 1.0))
@@ -21,20 +22,21 @@ genetic_groups <- function(relate, estimator, threshold = 0.4) {
     select(ind1, ind2, {{estimator}}) %>%
     filter(.data[[estimator]] > threshold)
 
-  # Add diagonals
-  lvl1 <- levels(as.factor(relate$ind1))
-  lvl2 <- levels(as.factor(relate$ind2))
-  ind <- unique(c(lvl1, lvl2))
+  # Add diagonals so that every retained individual shows up as a node
+  ind <- sort(unique(c(relate$ind1, relate$ind2)))
   tab <- data.frame(ind1 = ind, ind2 = ind, wang = 1)
   names(tab)[3] <- estimator
   relate <- rbind(relate, tab)
 
-  # Create the similarity matrix
-  relate <- xtabs(relate[, 3] ~ relate[, 2] + relate[, 1],
+  # Build the square similarity matrix. Rows and columns share the same levels,
+  # so a pair ends up in the same spot whatever the order of ind1 / ind2
+  relate <- xtabs(relate[, 3] ~ factor(relate[, 2], levels = ind) + factor(relate[, 1], levels = ind),
                   addNA = TRUE, drop.unused.levels = FALSE, sparse = TRUE)
 
   # Create the graph and detect groups
-  g <- graph_from_adjacency_matrix(relate, weighted = TRUE, diag = FALSE, mode = "lower")
+  # mode = "max": a pair counts as linked whichever triangle it sits in (coancestry gives one row per pair,
+  # in no particular order, so "lower" silently dropped about half of them)
+  g <- graph_from_adjacency_matrix(relate, weighted = TRUE, diag = FALSE, mode = "max")
   plot(g, main = "Graph of Genetic Relationships")
   dec <- as.data.frame(igraph::components(g)$membership)
   colnames(dec) <- c("group")
