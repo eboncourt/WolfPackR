@@ -3,10 +3,12 @@
 #' @param obs An sf object containing the observations, with columns for individual IDs and coordinates.
 #' @param group The name of the column in `obs` that contains the group information. If not provided, all individuals are treated as a single group.
 #' @param percentile The percentile for the MCP calculation (e.g., 95 for 95% MCP).
-#' @param buffer_radius The buffer radius to use if the MCP cannot be calculated.
+#' @param buffer_radius The buffer radius used around individuals with fewer than 3 points, in metres for geographic (lon/lat) data and in map units otherwise.
 #' @param max_iterations The maximum number of iterations for subgroup identification.
 #' @param min_mcp_overlap The minimum spatial overlap (between 0 and 1) required to consider two MCPs as linked (default: 0.5).
-#' @return A data.frame with updated subgroup assignments.
+#' @return A data.frame with one row per individual and its updated subgroup assignment.
+#' @importFrom dplyr filter .data
+#' @importFrom igraph graph_from_adjacency_matrix components
 #' @examples
 #' # Example usage:
 #' data("samples")
@@ -140,6 +142,11 @@ spatial_groups <- function(obs, group = NULL, percentile = 100, buffer_radius = 
       }
     }
   }
+
+  # One row per individual (results was built from obs, so one row per sample until now);
+  # this keeps merge(samples, result, by = "Individual") from blowing up into a cartesian product
+  results <- unique(results)
+  rownames(results) <- NULL
 
   return(results)
 }

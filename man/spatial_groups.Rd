@@ -20,14 +20,14 @@ spatial_groups(
 
 \item{percentile}{The percentile for the MCP calculation (e.g., 95 for 95\% MCP).}
 
-\item{buffer_radius}{The buffer radius to use if the MCP cannot be calculated.}
+\item{buffer_radius}{The buffer radius used around individuals with fewer than 3 points, in metres for geographic (lon/lat) data and in map units otherwise.}
 
 \item{max_iterations}{The maximum number of iterations for subgroup identification.}
 
 \item{min_mcp_overlap}{The minimum spatial overlap (between 0 and 1) required to consider two MCPs as linked (default: 0.5).}
 }
 \value{
-A data.frame with updated subgroup assignments.
+A data.frame with one row per individual and its updated subgroup assignment.
 }
 \description{
 This function identifies spatial groups or subgroups within groups using Minimum Convex Polygons (MCP) and clustering based on spatial overlap.
