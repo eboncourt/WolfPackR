@@ -3,8 +3,10 @@
 #' @param obs An `sf` object with individuals and their packs.
 #' @param pack The name of the column in `obs` that contains the pack information.
 #' @return An interactive leaflet map.
-#' @importFrom sf st_is_longlat st_coordinates st_polygon st_sf st_sfc st_as_sf
-#' @importFrom leaflet colorFactor addTiles addPolylines addPolygons fitBounds addCircleMarkers addLegend
+#' @importFrom sf st_is_longlat st_coordinates st_polygon st_sf st_sfc st_as_sf st_transform
+#' @importFrom leaflet leaflet colorFactor addTiles addPolygons fitBounds addCircleMarkers addLegend
+#' @importFrom dplyr %>%
+#' @importFrom grDevices chull colorRampPalette
 #' @export
 #' @examples
 #' data(samples)
@@ -23,13 +25,10 @@
 plot_packs <- function(obs, pack) {
   pack_name <- deparse(substitute(pack))
 
-  suppressPackageStartupMessages({
-    library(leaflet)
-    library(sf)
-    library(RColorBrewer)
-  })
+  # No more library() calls here: leaflet, sf and RColorBrewer come through the NAMESPACE,
+  # so the user's search path is left alone
 
-  # Vérification des données d'entrée
+  # Check input data
   if (!inherits(obs, "sf")) {
     stop("The 'obs' object must be of class 'sf'.")
   }
@@ -40,15 +39,16 @@ plot_packs <- function(obs, pack) {
 
   # Create a color palette for packs
   packs <- unique(obs[[pack_name]][obs[[pack_name]] != "Lone Individual"])
-  
-# Extend palette "Set1": if we have more than 9 packs, we interpolate to get enough colours
-n_packs <- length(packs)
-pal_cols <- if (n_packs <= 9) {
-  RColorBrewer::brewer.pal(max(3, n_packs), "Set1")
-} else {
-  grDevices::colorRampPalette(RColorBrewer::brewer.pal(9, "Set1"))(n_packs)
-}
-colors <- colorFactor(palette = pal_cols, domain = packs)
+
+  # Extend palette "Set1": if we have more than 9 packs, we interpolate to get enough colours
+  n_packs <- length(packs)
+  pal_cols <- if (n_packs <= 9) {
+    RColorBrewer::brewer.pal(max(3, n_packs), "Set1")
+  } else {
+    colorRampPalette(RColorBrewer::brewer.pal(9, "Set1"))(n_packs)
+  }
+  colors <- colorFactor(palette = pal_cols, domain = packs)
+
   # Ensure coordinates are in WGS84 (EPSG:4326)
   if (!st_is_longlat(obs)) {
     obs <- tryCatch(st_transform(obs, 4326), error = function(e) {
