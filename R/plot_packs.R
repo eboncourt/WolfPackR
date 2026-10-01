@@ -40,8 +40,15 @@ plot_packs <- function(obs, pack) {
 
   # Create a color palette for packs
   packs <- unique(obs[[pack_name]][obs[[pack_name]] != "Lone Individual"])
-  colors <- colorFactor(palette = "Set1", domain = packs)
-
+  
+# Extend palette "Set1": if we have more than 9 packs, we interpolate to get enough colours
+n_packs <- length(packs)
+pal_cols <- if (n_packs <= 9) {
+  RColorBrewer::brewer.pal(max(3, n_packs), "Set1")
+} else {
+  grDevices::colorRampPalette(RColorBrewer::brewer.pal(9, "Set1"))(n_packs)
+}
+colors <- colorFactor(palette = pal_cols, domain = packs)
   # Ensure coordinates are in WGS84 (EPSG:4326)
   if (!st_is_longlat(obs)) {
     obs <- tryCatch(st_transform(obs, 4326), error = function(e) {
