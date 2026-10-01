@@ -1,28 +1,30 @@
-library(sf)
+square <- function(xmin, ymin, xmax, ymax, crs = 4326) {
+  sf::st_as_sfc(sf::st_bbox(c(xmin = xmin, ymin = ymin, xmax = xmax, ymax = ymax), crs = crs))
+}
+
 test_that("calculate_overlap returns an overlapping value between 0 and 1", {
-  mcp1 <- sf::st_as_sfc(sf::st_bbox(c(xmin = 0, ymin = 0, xmax = 5, ymax = 5), crs = 4326))
-  mcp2 <- sf::st_as_sfc(sf::st_bbox(c(xmin = 4, ymin = 4, xmax = 9, ymax = 9), crs = 4326))
-  result <- calculate_overlap(mcp1, mcp2)
+  result <- calculate_overlap(square(0, 0, 5, 5), square(4, 4, 9, 9))
+  expect_type(result, "double")
+  expect_gt(result, 0)
+  expect_lt(result, 1)
+})
 
-  expect_is(result, "numeric")
-  expect_true(result <= 1)
-  expect_true(result >= 0)
-
+test_that("calculate_overlap is relative to the area of mcp2", {
+  big <- square(0, 0, 4, 4, crs = NA)
+  small <- square(1, 1, 2, 2, crs = NA)
+  expect_equal(calculate_overlap(big, small), 1)       # small entirely inside big
+  expect_equal(calculate_overlap(small, big), 1 / 16)  # 1 unit2 out of 16
 })
 
 test_that("calculate_overlap returns 0 if no overlapping", {
-  mcp1 <- sf::st_as_sfc(sf::st_bbox(c(xmin = 0, ymin = 0, xmax = 2, ymax = 2), crs = 4326))
-  mcp2 <- sf::st_as_sfc(sf::st_bbox(c(xmin = 3, ymin = 3, xmax = 5, ymax = 5), crs = 4326))
-
-  result <- calculate_overlap(mcp1, mcp2)
-  expect_true(result == 0)
+  expect_equal(calculate_overlap(square(0, 0, 2, 2), square(3, 3, 5, 5)), 0)
 })
 
-
 test_that("calculate_overlap returns 0 if one polygon is null", {
-  mcp1 <- sf::st_as_sfc(sf::st_bbox(c(xmin = 0, ymin = 0, xmax = 2, ymax = 2), crs = 4326))
-  mcp2 <- NULL
+  expect_equal(calculate_overlap(square(0, 0, 2, 2), NULL), 0)
+})
 
-  result <- calculate_overlap(mcp1, mcp2)
-  expect_true(result == 0)
+# Regression test: different CRS used to be swallowed by a tryCatch and return 0
+test_that("calculate_overlap stops when the CRS differ", {
+  expect_error(calculate_overlap(square(0, 0, 2, 2), square(1, 1, 3, 3, crs = NA)), "same CRS")
 })

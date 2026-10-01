@@ -9,15 +9,15 @@ mcp_sf(data, percentile = 100, buffer_radius = 0.01)
 \arguments{
 \item{data}{An \code{sf} object or a data.frame with columns \code{X} and \code{Y}.}
 
-\item{percentile}{The percentile of points (distance from centroid) excluded before calculating the MCP. Default is 100.}
+\item{percentile}{The percentage of points (the closest to the centroid) kept to calculate the MCP. Default is 100 (all points).}
 
-\item{buffer_radius}{The buffer distance around the coordinates if there is insufficient data to calculate a MCP (less than 3 data points) (default: 0.01).}
+\item{buffer_radius}{The buffer distance used around the point(s) when there are fewer than 3 points left, or when all points are aligned. It is in metres for geographic (lon/lat) data and in map units otherwise (default: 0.01).}
 }
 \value{
-An \code{sf} object representing the MCP, or \code{NULL} if insufficient points.
+An \code{sfc} polygon with the same CRS as \code{data}: the MCP, or a buffer around the points when no MCP can be computed.
 }
 \description{
-Computes the MCP for a set of spatial points using \code{sf}, with an option to exclude points beyond a given percentile of distance from the centroid. Largely inspired by juoe (https://rdrr.io/github/juoe/sdmflow/).
+Computes the MCP for a set of spatial points using \code{sf}, keeping only the points within a given percentile of distance from the centroid. Largely inspired by juoe (https://rdrr.io/github/juoe/sdmflow/).
 }
 \examples{
 obs <- data.frame(X = c(1,2,2,5,5,6,7,8,9), Y = c(1,2,9,4,5,6,1,8,9))
