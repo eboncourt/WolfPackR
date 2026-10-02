@@ -1,6 +1,6 @@
 Package: WolfPackR
 Title: Identifies wolf packs based on genetic and spatial data
-Version: 0.9.3
+Version: 0.9.4
 Authors@R: 
     person("Etienne", "Boncourt", , "etienne.boncourt@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-8233-0190"))
@@ -13,8 +13,13 @@ URL: https://github.com/eboncourt/WolfPackR
 BugReports: https://github.com/eboncourt/WolfPackR/issues
 Imports: 
     dplyr,
+    grDevices,
     igraph,
     leaflet,
-    sf
-Suggests: knitr, rmarkdown, testthat, covr
+    RColorBrewer,
+    sf,
+    stats,
+    utils
+Suggests: knitr, rmarkdown, testthat (>= 3.0.0), covr
+Config/testthat/edition: 3
 VignetteBuilder: knitr

@@ -19,9 +19,9 @@ summarise_packs(
 
 \item{sex_column}{The name of the column in obs that contains sex information (default: "Sex").}
 
-\item{male_pattern}{A regex pattern to identify males in Individual IDs (default: "M").}
+\item{male_pattern}{A regex pattern to identify males, matched against \code{sex_column} if it exists, otherwise against Individual IDs (default: "M"). Anchor it when needed, e.g. "^M" for a sex column or "_M$" for IDs ending in "_M".}
 
-\item{female_pattern}{A regex pattern to identify females in Individual IDs (default: "F").}
+\item{female_pattern}{A regex pattern to identify females, matched the same way as \code{male_pattern} (default: "F").}
 }
 \value{
 A list containing detailed summaries of packs and individuals.

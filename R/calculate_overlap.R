@@ -6,7 +6,7 @@
 #' @param mcp1 The first polygon (sf object).
 #' @param mcp2 The second polygon (sf object).
 #'
-#' @return A numeric value between 0 and 1 representing the overlap ratio.
+#' @return A numeric value between 0 and 1: the area of the intersection divided by the area of `mcp2`.
 #'
 #' @examples
 #' # Example usage:
@@ -14,11 +14,17 @@
 #' mcp2 <- sf::st_as_sfc(sf::st_bbox(c(xmin = 4, ymin = 4, xmax = 9, ymax = 9), crs = 4326))
 #' overlap_ratio <- calculate_overlap(mcp1, mcp2)
 #'
+#' @importFrom sf st_intersection st_area st_buffer st_geometry_type st_crs
 #' @export
 calculate_overlap <- function(mcp1, mcp2) {
   # Check inputs
   if (is.null(mcp1) || is.null(mcp2)) {
     return(0)
+  }
+
+  # Different CRS used to end up in the tryCatch below and silently return 0: now it's a real error
+  if (st_crs(mcp1) != st_crs(mcp2)) {
+    stop("'mcp1' and 'mcp2' must have the same CRS.")
   }
 
   # Calculate intersection

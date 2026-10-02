@@ -12,7 +12,7 @@ calculate_overlap(mcp1, mcp2)
 \item{mcp2}{The second polygon (sf object).}
 }
 \value{
-A numeric value between 0 and 1 representing the overlap ratio.
+A numeric value between 0 and 1: the area of the intersection divided by the area of \code{mcp2}.
 }
 \description{
 This function calculates the overlap ratio between two polygons.
