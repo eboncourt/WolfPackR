@@ -5,21 +5,22 @@
 \alias{Bruvo_Carpathians}
 \title{Bruvo_Carpathians}
 \format{
-A data frame with 6320 rows and 3 variables:
+A data.frame with 2162 rows (both orders of each pair) and 3 variables:
 \describe{
-\item{ ind1 }{  character }
-\item{ ind2 }{  character }
-\item{ 1-Bruvo }{  numeric }
+\item{ind1, ind2}{character, the two individuals}
+\item{1-Bruvo}{numeric, 1 - Bruvo distance}
 }
 }
 \source{
-Source
+Computed with the polysat package from the genotypes of Foundation Conservation Carpathia (2024),
+Zenodo, \doi{10.5281/zenodo.14544266}.
 }
 \usage{
-Bruvo_Carpathians
+data(Bruvo_Carpathians)
 }
 \description{
-Description.
-A data frame containing pairwise relatedness estimators (1 - Bruvo distance) for 177 individuals. This dataset is derived from the work of Iosif, R., Skrbinšek, T., Erős, N., Konec, M., Boljte, B., Jan, M., & Promberger‐Fürpass, B. (2025). Wolf Population Size and Composition in One of Europe’s Strongholds, the Romanian Carpathians. Ecology and Evolution, 15(4), e71200. https://doi.org/10.1002/ece3.71200. Dataset reference: Foundation Conservation Carpathia. (2024). Wolf population size and composition in one of Europe’s strongholds, the Romanian Carpathians (Dataset). Zenodo. https://doi.org/10.5281/ZENODO.14544266
+Genetic similarity (1 - Bruvo distance; Bruvo et al., 2004) between the 47 individuals of \link{samples_Carpathians},
+as used in the first version of the WolfPackR paper. Kept for comparison: Bruvo similarity is not a
+relatedness estimator, prefer \link{relate_Carpathians}. Dogs that were in earlier versions of this dataset are removed.
 }
 \keyword{datasets}

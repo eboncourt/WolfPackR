@@ -2,53 +2,104 @@
 % Please edit documentation in R/summarise_packs.R
 \name{summarise_packs}
 \alias{summarise_packs}
-\title{Summarise Packs and Individuals}
+\title{Summarise packs}
 \usage{
 summarise_packs(
   obs,
-  pack,
+  pack = "Pack",
+  ud = NULL,
+  h = NULL,
+  levels = c(0.95, 0.5),
+  relate = NULL,
+  estimator = NULL,
+  n_perm = 999,
+  period = NULL,
+  date = NULL,
+  min_territory = 5,
   sex_column = "Sex",
-  male_pattern = "M",
-  female_pattern = "F"
+  male_pattern = "^M",
+  female_pattern = "^F",
+  seed = 1
 )
 }
 \arguments{
-\item{obs}{An \code{sf} object with individuals and their packs.}
+\item{obs}{An \code{sf} object of points (one row per sample) with \code{Individual} and the pack column; \code{Sex} and
+\code{Status} columns are used when present.}
 
-\item{pack}{The name of the column in \code{obs} that contains the pack information.}
+\item{pack}{Name of the pack column (default \code{"Pack"}). \code{NA} or \code{"Lone Individual"} = no pack.}
 
-\item{sex_column}{The name of the column in obs that contains sex information (default: "Sex").}
+\item{ud}{A \code{wolfpack_ud} object from \code{\link[=space_use]{space_use()}}; computed from \code{obs} if \code{NULL}.}
 
-\item{male_pattern}{A regex pattern to identify males, matched against \code{sex_column} if it exists, otherwise against Individual IDs (default: "M"). Anchor it when needed, e.g. "^M" for a sex column or "_M$" for IDs ending in "_M".}
+\item{h}{Bandwidth passed to \code{\link[=space_use]{space_use()}} when \code{ud} is \code{NULL}.}
 
-\item{female_pattern}{A regex pattern to identify females, matched the same way as \code{male_pattern} (default: "F").}
+\item{levels}{Isopleth levels for the areas (default: 95\% territory and 50\% core area). The largest one is used
+for the space shared between packs.}
+
+\item{relate, estimator}{Optional pairwise relatedness table and estimator column, for the within-pack relatedness.}
+
+\item{n_perm}{Number of permutations for the relatedness test (default: 999).}
+
+\item{period}{Optional name of the column of \code{obs} with the sampling period (e.g. \code{"Campaign"}).}
+
+\item{date}{Optional name of the column of \code{obs} with the sampling date (class \code{Date}).}
+
+\item{min_territory}{Minimum number of samples of a pack in a period to draw its territory for that period
+(default: 5), see \code{\link[=pack_timeline]{pack_timeline()}}.}
+
+\item{sex_column, male_pattern, female_pattern}{Column holding the sex and regex patterns for males and females.}
+
+\item{seed}{Random seed for the permutations (your own random numbers are left alone).}
 }
 \value{
-A list containing detailed summaries of packs and individuals.
+A data.frame with one row per pack:
+\itemize{
+\item \code{Pack}, \code{n_individuals}, \code{n_males}, \code{n_females}, \code{n_samples}, one \verb{area<level>_km2} column per level and
+\code{statuses} (if \code{obs} has a \code{Status} column);
+\item \code{shared_pct} (\% of the territory inside the territory of at least one other pack), \code{nearest_pack}, \code{nearest_km};
+\item with \code{period}: \code{first_period}, \code{last_period} and \code{n_periods} (periods in which the pack was detected in its
+territory), \code{n_persistent} (members detected there in 2 periods or more), \code{min_affinity} (affinity between the
+territory of the least similar period and the territory over all periods) and \code{max_shift_km} (largest
+distance between the centre of the territory in a period and over all periods);
+\item with \code{date}: \code{tenure_years}, time from the first to the last detection of a member in the territory;
+\item with \code{relate}: \code{mean_r}, \code{r_z} and \code{r_p} (permutation p-value, one-sided: more related than random packs).
+}
+
+Per-individual details are in \code{attr(, "individuals")} (with \code{period} and \code{date}: first and last period in
+the territory, number of periods, pattern from \code{\link[=pack_timeline]{pack_timeline()}}, tenure in years), and, with \code{period}, the
+pack x period table of \code{\link[=pack_timeline]{pack_timeline()}} is in \code{attr(, "periods")}.
 }
 \description{
-Summarises individuals and their packs, including putative dominant individuals.
+One line per pack, along the lines of the land tenure framework of Kanishka et al. (2026):
+\itemize{
+\item \strong{Composition}: number of individuals (by sex), of samples, and statuses;
+\item \strong{Space use}: territory and core area (kernel isopleths), share of the territory also inside the territory
+of another pack, and nearest pack (distance between the centres of their UDs);
+\item \strong{Through time} (with \code{period} and/or \code{date}): when the pack was detected in its territory, how many members
+were detected there in more than one period, how much the territory changed from one period to the next
+(summed up from \code{\link[=pack_timeline]{pack_timeline()}}) and the time from the first to the last detection in the territory;
+\item \strong{Kinship} (with \code{relate}): mean relatedness within the pack, tested against random packs of the same sizes
+(permutations of the pack labels among the individuals in a pack).
+}
+
+A member is detected in a period when one of its samples of that period falls in its pack's territory.
+The time columns describe what was sampled: they are minimum values (a pack was there at least from its first to
+its last detection), a pack or a member not detected in a period may simply not have been sampled there, and
+a study as long as the tenures can't measure them. Read them in the light of the sampling effort.
+
+Earlier versions also gave "putative dominant" individuals (the most sampled male and female). This is gone:
+on the Carpathian data, the most sampled individual of each sex was the known breeder in only half of the
+cases. The number of samples per individual is still there, as a plain description, in \code{attr(, "individuals")}.
 }
 \examples{
-data(samples)
-samples$pack <- NA
-samples[samples$Individual == "W1",]$pack <- "1"
-samples[samples$Individual == "W2",]$pack <- "1"
-samples[samples$Individual == "W3",]$pack <- "1"
-samples[samples$Individual == "W4",]$pack <- "Lone Individual"
-samples[samples$Individual == "W5",]$pack <- "2"
-samples[samples$Individual == "W6",]$pack <- "3"
-samples[samples$Individual == "W7",]$pack <- "2"
-samples[samples$Individual == "W8",]$pack <- "2"
-samples[samples$Individual == "W9",]$pack <- "3"
-samples[samples$Individual == "W1",]$Individual <- "M1"
-samples[samples$Individual == "W2",]$Individual <- "M2"
-samples[samples$Individual == "W3",]$Individual <- "M3"
-samples[samples$Individual == "W4",]$Individual <- "M4"
-samples[samples$Individual == "W5",]$Individual <- "F1"
-samples[samples$Individual == "W6",]$Individual <- "F2"
-samples[samples$Individual == "W7",]$Individual <- "F3"
-samples[samples$Individual == "W8",]$Individual <- "F4"
-samples[samples$Individual == "W9",]$Individual <- "F5"
-summary <- summarise_packs(samples, pack, male_pattern = "M", female_pattern = "F")
+data("samples_Carpathians"); data("relate_Carpathians")
+res <- wolf_packs(samples_Carpathians, relate_Carpathians, "QG", 0.25, period = "Campaign")
+sm <- summarise_packs(res$samples, "Pack", ud = res$ud, relate = relate_Carpathians, estimator = "QG",
+                      n_perm = 199, period = "Campaign", date = "Date")
+sm
+attr(sm, "periods")
+}
+\references{
+Kanishka, Koley, S., Khan, S., Hussain, Z., Sathyakumar, S., & Habib, B. (2026). The missing metric
+in ecological studies: Land tenure system of territorial carnivores. Journal of Animal Ecology.
+\doi{10.1111/1365-2656.70373}
 }

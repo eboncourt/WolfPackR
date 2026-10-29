@@ -1,10 +1,10 @@
 ---
-title: "WolfPackR: Analyzing Wolf Pack Territories"
-author: "Etienne Boncourt"  
-date: "`r Sys.Date()`"  
+title: "WolfPackR: identifying wolf packs from genetic and spatial data"
+author: "Etienne Boncourt"
+date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{WolfPackR: Analyzing Wolf Pack Territories}
+  %\VignetteIndexEntry{WolfPackR: identifying wolf packs from genetic and spatial data}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -13,102 +13,159 @@ vignette: >
 knitr::opts_chunk$set(error = TRUE, message = FALSE, warning = FALSE)
 ```
 
-# Introduction
+# The workflow in a nutshell
 
-The **WolfPackR** package provides a comprehensive toolkit for analyzing the genetic and spatial structures of wolf packs. This vignette demonstrates how to use **WolfPackR** to analyze wolf pack territories, from genetic relatedness to spatial pack visualization, using both simulated and real-world datasets.
+**WolfPackR** puts genotyped individuals into packs by combining who is related to whom (genetics) with who uses which space (non-invasive samples: scats, urine, hair...). The typical workflow has four steps:
 
----
+1. `genetic_groups()`: families, from pairwise relatedness (e.g. computed by `relatedness()`), found by community detection (Leiden by default);
+2. `space_use()`: the space use of every individual, as a kernel density (utilisation distribution, UD) on a common grid, with one bandwidth `h` for everybody, so that individuals with a single sample are handled like the others;
+3. `assign_individuals()`: each family gets a reference territory, each sample goes to the territory it falls in (or "outside"), each individual goes where most of its samples are, and gets a status (Resident, Putative disperser, Disperser, Unrelated resident, Transient, Undetermined);
+4. `spatial_groups()`: families spread over several territories are split into spatially coherent packs.
 
-# Data Preparation
+Then `summarise_packs()`, `plot_packs()` and `pack_timeline()` describe the packs, and `compare_partitions()` and `pack_stability()` check how good and how robust they are. `wolf_packs()` runs steps 1 to 4 in one go.
 
-First, we load the necessary libraries and datasets provided with the package.
-
-```{r load-libraries}
+```{r load}
 library(WolfPackR)
 ```
 
 ---
 
-# Analysis Workflow
+# A quick run on simulated data
 
-## 1. Simulated Dataset
+Nine fictitious wolves, with Wang's relatedness:
 
-### Genetic Groups
-
-We start by identifying genetic groups using the `genetic_groups()` function. This function clusters individuals based on genetic relatedness.
-
-```{r genetic-groups}
-data("relate")
-data("samples")
-
-gengroups <- genetic_groups(relate, threshold = 0.4, estimator = "wang")
-obs <- merge(samples, gengroups, by = "Individual")
-plot_packs(obs, group)
-```
-
-### Ugly Ducklings
-
-Next, we identify "ugly ducklings"—individuals that do not fit well into their assigned genetic groups—using the `ugly_ducklings()` function.
-
-```{r ugly-ducklings}
-ud_df <- ugly_ducklings(obs, group = group, min_overlap = 0.7, buffer = 0, mcp.percent = 100)
-obs2 <- merge(samples, ud_df, by = "Individual")
-plot_packs(obs2, new_group)
-```
-
-### Spatial Groups
-
-Finally, we refine the spatial grouping of individuals using the `spatial_groups()` function, which clusters individuals based on spatial proximity.
-
-```{r spatial-groups}
-spatgroups <- spatial_groups(obs2, group = "new_group", percentile = 100,
-                             buffer_radius = 0.0000001, max_iterations = 20, min_mcp_overlap = 0.6)
-obs3 <- merge(samples, spatgroups, by = "Individual")
-plot_packs(obs3, Subgroup)
+```{r toy}
+data("samples_example")
+data("relate_example")
+toy <- wolf_packs(samples_example, relate_example, estimator = "wang", threshold = 0.4)
+toy
+toy$individuals[, c("Individual", "Genetic_Group", "Pack", "Status", "split")]
+plot_packs(toy$samples, "Pack", ud = toy$ud)
 ```
 
 ---
 
-## 2. Real-Life Dataset: Carpathian Wolves
+# Step by step: wolves of the Romanian Carpathians
 
-### Genetic Groups
+263 non-invasive genetic samples of 47 wolves (one of them a wolf x dog hybrid) collected from 2017 to 2020 (Foundation Conservation Carpathia, 2024; Iosif et al., 2025), with their 22-microsatellite genotypes.
 
-We apply the same workflow to a real-life dataset from Iosif et al. (2025), focusing on Carpathian wolves.
-
-```{r genetic-groups-carpat}
-data("Bruvo_Carpathians")
+```{r carpat-data}
 data("samples_Carpathians")
-
-gengroups_carpat <- genetic_groups(Bruvo_Carpathians, threshold = 0.7, estimator = "1-Bruvo")
-obs_carpat <- merge(samples_Carpathians, gengroups_carpat, by = "Individual")
-plot_packs(obs_carpat, group)
+data("genotypes_Carpathians")
+table(samples_Carpathians$Campaign)
 ```
 
-### Ugly Ducklings
+## 1. Relatedness and genetic groups
 
-We identify "ugly ducklings" in the Carpathian dataset.
+Relatedness is computed from the genotypes, leaving the hybrid out of the allele frequencies. With the Queller & Goodnight estimator, 0.25 is the value expected for second-degree relatives (0.5 for first-degree ones). A few spurious links are unavoidable at this threshold: community detection (Leiden) keeps them from chaining families together, which connected components would do. The null model compares the modularity of the groups with that of random graphs.
 
-```{r ugly-ducklings-carpat}
-ud_df_carpat <- ugly_ducklings(obs_carpat, group = group, min_overlap = 0.5, buffer = 0, mcp.percent = 100)
-obs2_carpat <- merge(samples_Carpathians, ud_df_carpat, by = "Individual")
-plot_packs(obs2_carpat, new_group)
+```{r genetic}
+rel <- relatedness(genotypes_Carpathians,
+                   freq_ids = setdiff(genotypes_Carpathians$Individual, "EF.15J8"))
+gen <- genetic_groups(rel, estimator = "QG", threshold = 0.25, n_null = 99)
+attr(gen, "modularity")
+table(table(gen$group))          # group sizes
 ```
 
-### Spatial Groups
+## 2. Space use
 
-We refine the spatial grouping for the Carpathian dataset.
-
-```{r spatial-groups-carpat}
-spatgroups_carpat <- spatial_groups(obs2_carpat, group = "new_group", percentile = 100,
-                             buffer_radius = 0.0000001, max_iterations = 20, min_mcp_overlap = 0.5)
-obs3_carpat <- merge(samples_Carpathians, spatgroups_carpat, by = "Individual")
-plot_packs(obs3_carpat, Subgroup)
+```{r space}
+obs <- merge(samples_Carpathians, gen, by = "Individual")
+ud <- space_use(obs)             # bandwidth chosen from the well-sampled individuals
+ud
+round(ud_overlap(ud)[1:5, 1:5], 2)
 ```
+
+## 3. Assigning individuals
+
+With the relatedness table, relatives are defined pair by pair. With `period`, the spread of each individual is measured within each sampling season, and dispersal can be dated.
+
+```{r assign}
+ai <- assign_individuals(obs, "group", ud = ud, relate = rel, estimator = "QG", threshold = 0.25,
+                         period = "Campaign")
+table(ai$Status)
+ai[ai$Status != "Resident", c("Individual", "Genetic_Group", "Group", "Status", "n_samples", "split")]
+```
+
+## 4. Spatially coherent packs
+
+```{r packs}
+obs$Group <- ai$Group[match(obs$Individual, ai$Individual)]
+packs <- spatial_groups(obs, "Group", ud = ud, period = "Campaign")
+table(packs$Pack, useNA = "ifany")
+```
+
+## Describing the packs
+
+```{r describe}
+obs$Pack <- packs$Pack[match(obs$Individual, packs$Individual)]
+obs$Status <- ai$Status[match(obs$Individual, ai$Individual)]
+summarise_packs(obs, "Pack", ud = ud, relate = rel, estimator = "QG", n_perm = 199)
+plot_packs(obs, "Pack", ud = ud)
+```
+
+`shared_pct` is the share of each territory (95% isopleth) that lies inside the territory of another pack, and `nearest_km` the distance to the nearest pack.
+
+## Through time
+
+`pack_timeline()` follows each individual and each territory from one season to the next: who was detected in which territory, who changed pack, and how far each territory moved.
+
+```{r timeline}
+tl <- pack_timeline(obs, "Pack", period = "Campaign", ud = ud)
+table(tl$individuals$pattern)
+tl$individuals[tl$individuals$pattern == "changed pack", 1:7]
+tl$territories
+```
+
+With `period` and `date`, `summarise_packs()` sums this up for each pack, following the land tenure framework of Kanishka et al. (2026): seasons in which the pack was detected in its territory, members detected there in more than one season, lowest affinity between a seasonal territory and the territory over all seasons, largest shift, and time from the first to the last detection.
+
+```{r tenure}
+sm <- summarise_packs(obs, "Pack", ud = ud, period = "Campaign", date = "Date")
+sm[, c("Pack", "first_period", "last_period", "n_periods", "n_persistent", "min_affinity", "max_shift_km", "tenure_years")]
+```
+
+These are minimum values that depend on the sampling: a pack missing from a season may not have been sampled there (a single sample was collected in the territory of pack 4 in 2017-18, see `effort_Carpathians`), seasonal territories drawn from few samples are smaller, and a 3-season study can't measure tenures longer than itself.
 
 ---
 
-# Conclusion
+# All at once, and how good it is
 
-This vignette demonstrates the core functionality of **WolfPackR** for analyzing wolf pack territories using both simulated and real-world datasets. The package provides a robust framework for genetic and spatial analysis, enabling researchers to gain insights into wolf pack dynamics.
+`wolf_packs()` runs the four steps with the same settings:
 
-For more details, refer to the [WolfPackR GitHub repository](https://github.com/eboncourt/WolfPackR).
+```{r all}
+res <- wolf_packs(samples_Carpathians, rel, "QG", 0.25, period = "Campaign")
+res
+```
+
+The packs of Iosif et al. (2025), reconstructed from parentage, serve as a reference:
+
+```{r validation}
+data("reference_Carpathians")
+compare_partitions(res$individuals, reference_Carpathians)
+```
+
+And how much do the packs depend on the settings and on sampling chance?
+
+```{r stability}
+st <- pack_stability(samples_Carpathians, rel, "QG", 0.25,
+                     vary = list(threshold = c(0.2, 0.25, 0.3), h = c(1500, 2500)),
+                     n_boot = 10, reference = reference_Carpathians, period = "Campaign")
+st$runs
+head(st$individuals[order(st$individuals$stability), ])
+```
+
+Is the sampling dense enough? Subsampling keeps only part of the samples, as with a lighter field effort, and shows how fast the packs degrade:
+
+```{r subsampling}
+sub <- pack_stability(samples_Carpathians, rel, "QG", 0.25, fraction = c(0.9, 0.75, 0.5, 0.25), n_sub = 10,
+                      reference = reference_Carpathians, period = "Campaign")
+sub$subsampling
+```
+
+# References
+
+Foundation Conservation Carpathia (2024). Wolf population size and composition in one of Europe's strongholds, the Romanian Carpathians (Dataset). Zenodo. https://doi.org/10.5281/zenodo.14544266
+
+Iosif, R., Skrbinšek, T., Erős, N., Konec, M., Boljte, B., Jan, M., & Promberger-Fürpass, B. (2025). Wolf population size and composition in one of Europe's strongholds, the Romanian Carpathians. Ecology and Evolution, 15(4), e71200. https://doi.org/10.1002/ece3.71200
+
+Kanishka, Koley, S., Khan, S., Hussain, Z., Sathyakumar, S., & Habib, B. (2026). The missing metric in ecological studies: Land tenure system of territorial carnivores. Journal of Animal Ecology. https://doi.org/10.1111/1365-2656.70373

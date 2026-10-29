@@ -1,5 +1,8 @@
-#' @title Calculate Minimum Convex Polygon (MCP) with Percentile Filtering
-#' @description Computes the MCP for a set of spatial points using `sf`, keeping only the points within a given percentile of distance from the centroid. Largely inspired by juoe (https://rdrr.io/github/juoe/sdmflow/).
+#' @title Calculate Minimum Convex Polygon (MCP) with Percentile Filtering (deprecated)
+#' @description Deprecated in WolfPackR 1.0.0 and to be removed in 1.1: territories are now estimated by kernel
+#'   density, see [space_use()] and [isopleth()].
+#'
+#'   Computes the MCP for a set of spatial points using `sf`, keeping only the points within a given percentile of distance from the centroid. Largely inspired by juoe (https://rdrr.io/github/juoe/sdmflow/).
 #' @param data An `sf` object or a data.frame with columns `X` and `Y`.
 #' @param percentile The percentage of points (the closest to the centroid) kept to calculate the MCP. Default is 100 (all points).
 #' @param buffer_radius The buffer distance used around the point(s) when there are fewer than 3 points left, or when all points are aligned. It is in metres for geographic (lon/lat) data and in map units otherwise (default: 0.01).
@@ -12,6 +15,8 @@
 #' obs_sf <- sf::st_as_sf(obs, coords = c("X", "Y"))
 #' mcp_sf(obs_sf, percentile=100, buffer_radius=0.01)
 mcp_sf <- function(data, percentile=100, buffer_radius=0.01){
+  .Deprecated("isopleth", package = "WolfPackR",
+              msg = "mcp_sf() is deprecated and will be removed in WolfPackR 1.1: use space_use() and isopleth() (kernel density) instead.")
 
   if (!inherits(data, "sf")) {
     if (!all(c("X", "Y") %in% colnames(data))) {

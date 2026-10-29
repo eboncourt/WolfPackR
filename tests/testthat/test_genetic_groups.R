@@ -57,7 +57,7 @@ test_that("genetic_groups does not depend on the order of ind1 and ind2", {
 
 # Test 6: one row per pair in random order (like coancestry output) gives the same groups as the full matrix
 test_that("genetic_groups gives the same groups with one row per pair as with the full matrix", {
-  relate <- pkg_data("relate")
+  relate <- pkg_data("relate_example")
   full <- genetic_groups(relate, "wang", 0.4)
 
   half <- relate[as.character(relate$ind1) < as.character(relate$ind2), ]  # one row per pair
@@ -71,4 +71,66 @@ test_that("genetic_groups gives the same groups with one row per pair as with th
   full <- full[order(full$Individual), ]
   from_half <- from_half[order(from_half$Individual), ]
   expect_equal(same_group(full), same_group(from_half))
+})
+
+# Two families of 4 joined by a single weak link: the classic case where connected components merge them
+two_families <- function() {
+  fam <- function(ids) { p <- t(utils::combn(ids, 2)); data.frame(ind1 = p[, 1], ind2 = p[, 2], r = 0.5) }
+  rbind(fam(c("A1", "A2", "A3", "A4")), fam(c("B1", "B2", "B3", "B4")),
+        data.frame(ind1 = "A1", ind2 = "B1", r = 0.3),          # one spurious link between the families
+        data.frame(ind1 = "Z", ind2 = "A2", r = 0.05))          # and someone unrelated to everybody
+}
+
+test_that("community detection splits two families that components merge", {
+  rel <- two_families()
+  comp <- genetic_groups(rel, "r", 0.25, method = "components")
+  expect_equal(length(unique(comp$group[comp$Individual != "Z"])), 1)
+  for (m in c("leiden", "louvain", "walktrap")) {
+    res <- genetic_groups(rel, "r", 0.25, method = m)
+    expect_equal(nrow(res), 9)
+    g <- stats::setNames(res$group, res$Individual)
+    expect_equal(length(unique(g[c("A1", "A2", "A3", "A4")])), 1)
+    expect_equal(length(unique(g[c("B1", "B2", "B3", "B4")])), 1)
+    expect_false(g["A1"] == g["B1"])
+    expect_false(g["Z"] %in% g[names(g) != "Z"])           # the unrelated one stays alone
+  }
+})
+
+test_that("genetic_groups is reproducible and leaves the user's random numbers alone", {
+  rel <- two_families()
+  set.seed(123); before <- stats::runif(1)
+  set.seed(123)
+  a <- genetic_groups(rel, "r", 0.25, method = "louvain")
+  after <- stats::runif(1)
+  expect_equal(before, after)
+  expect_equal(a, genetic_groups(rel, "r", 0.25, method = "louvain"))
+})
+
+test_that("genetic_groups copes with no pair above the threshold, and can draw the graph", {
+  rel <- two_families()
+  res <- genetic_groups(rel, "r", 0.9)
+  expect_equal(length(unique(res$group)), 9)
+  grDevices::pdf(NULL); on.exit(grDevices::dev.off())
+  expect_no_error(genetic_groups(rel, "r", 0.25, plot = TRUE))
+})
+
+test_that("genetic_groups refuses non-positive links, whatever the method", {
+  rel <- rbind(two_families(), data.frame(ind1 = "Z", ind2 = "B2", r = -0.2))   # QG or LR can be negative
+  expect_error(genetic_groups(rel, "r", -1, method = "leiden"), "positive weights")
+  expect_error(genetic_groups(rel, "r", -1), "positive weights")
+})
+
+test_that("leiden is the default method since 1.0.0", {
+  rel <- two_families()
+  expect_equal(genetic_groups(rel, "r", 0.25), genetic_groups(rel, "r", 0.25, method = "leiden"))
+})
+
+test_that("the null model gives a modularity well above random graphs for clear families", {
+  rel <- pkg_data("relate_Carpathians")
+  gg <- genetic_groups(rel, "QG", 0.25, n_null = 49)
+  mod <- attr(gg, "modularity")
+  expect_named(mod, c("Q", "null_mean", "null_sd", "z", "p"))
+  expect_gt(mod[["z"]], 3)
+  expect_lte(mod[["p"]], 0.05)
+  expect_null(attr(genetic_groups(rel, "QG", 0.25), "modularity"))   # no test unless asked
 })
