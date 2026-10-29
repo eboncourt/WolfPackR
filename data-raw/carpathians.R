@@ -7,6 +7,7 @@ pkgload::load_all()                                     # for relatedness()
 
 xlsx <- "data-raw/WolfSampleDataFCCSep2021Nandor.xlsx"
 rout <- as.data.frame(read_excel(xlsx, sheet = "ROut"))                    # one row per collected sample (505)
+rout <- rout[!(rout$X == 0 & rout$Y == 0), ]                               # 3 samples with no position (stored as 0, 0): a dog and 2 failed urines
 meta <- as.data.frame(read_excel(xlsx, sheet = "SampleData"))              # campaign label
 strc <- as.data.frame(read_excel(xlsx, sheet = "StructureRes2021_2"))      # wolf ancestry of each genotyped animal
 ref  <- as.data.frame(read_excel(xlsx, sheet = "ReferenceGenotypes"))      # reference genotype of each animal

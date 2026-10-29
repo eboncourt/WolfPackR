@@ -21,11 +21,19 @@ test_that("genotypes, relatedness and Bruvo tables cover the same 47 individuals
   expect_setequal(unique(c(bru$ind1, bru$ind2)), ids)
 })
 
-test_that("effort_Carpathians holds every collected sample, and its genotyped ones are samples_Carpathians", {
+test_that("effort_Carpathians holds every located sample, and its genotyped ones are samples_Carpathians", {
   e <- pkg_data("effort_Carpathians")
   s <- pkg_data("samples_Carpathians")
-  expect_equal(nrow(e), 505)
+  expect_equal(nrow(e), 502)
   expect_setequal(e$Sample[e$Verdict == "Genotyped"], s$Sample)
   expect_true(all(is.na(e$Individual[e$Verdict != "Genotyped"])))
   expect_false("CC01CK" %in% e$Individual)               # the dog labelled "Wolf" in the source file
+})
+
+test_that("every sample sits in the study area (no 0, 0 coordinates)", {
+  for (nm in c("samples_Carpathians", "effort_Carpathians")) {
+    xy <- sf::st_coordinates(pkg_data(nm))
+    expect_true(all(xy[, "X"] > 24.5 & xy[, "X"] < 25.5), label = paste(nm, "longitudes"))
+    expect_true(all(xy[, "Y"] > 45 & xy[, "Y"] < 46), label = paste(nm, "latitudes"))
+  }
 })
