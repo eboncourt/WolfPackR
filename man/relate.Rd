@@ -16,7 +16,7 @@ A data frame with 81 rows and 3 variables:
 Source
 }
 \usage{
-relate
+data(relate)
 }
 \description{
 Description.

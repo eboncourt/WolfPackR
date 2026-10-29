@@ -1,6 +1,6 @@
 Package: WolfPackR
 Title: Identifies wolf packs based on genetic and spatial data
-Version: 0.9.4
+Version: 0.9.5
 Authors@R: 
     person("Etienne", "Boncourt", , "etienne.boncourt@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-8233-0190"))
@@ -8,13 +8,12 @@ Description: WolfPackR is an R package designed to identify and analyze wolf pac
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 URL: https://github.com/eboncourt/WolfPackR
 BugReports: https://github.com/eboncourt/WolfPackR/issues
 Imports: 
     dplyr,
     grDevices,
-    igraph,
+    igraph (>= 1.3.0),
     leaflet,
     RColorBrewer,
     sf,
@@ -23,3 +22,4 @@ Imports:
 Suggests: knitr, rmarkdown, testthat (>= 3.0.0), covr
 Config/testthat/edition: 3
 VignetteBuilder: knitr
+Config/roxygen2/version: 8.1.1

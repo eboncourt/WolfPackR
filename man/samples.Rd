@@ -16,7 +16,7 @@ A data frame with 49 rows and 3 variables:
 Source
 }
 \usage{
-samples
+data(samples)
 }
 \description{
 Description.

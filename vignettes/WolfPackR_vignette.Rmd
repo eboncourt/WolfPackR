@@ -73,13 +73,17 @@ plot_packs(obs3, Subgroup)
 
 ### Genetic Groups
 
-We apply the same workflow to a real-life dataset from Iosif et al. (2025), focusing on Carpathian wolves.
+We apply the same workflow to a real-life dataset: 263 non-invasive genetic samples of 47 wolves (one of them a wolf x dog hybrid) collected in the Romanian Carpathians from 2017 to 2020 (Foundation Conservation Carpathia, 2024; Iosif et al., 2025).
+
+Pairwise relatedness is first computed from the microsatellite genotypes with `relatedness()`. The wolf x dog hybrid EF.15J8 is left out of the allele frequencies. We use the Queller & Goodnight estimator with a threshold of 0.25, the value expected for second-degree relatives (first-degree relatives are expected at 0.5), so pairs above it are likely close kin. Because a few spurious links are unavoidable at such a threshold, groups are built by community detection (Leiden) rather than connected components, which would chain families together through single links.
 
 ```{r genetic-groups-carpat}
-data("Bruvo_Carpathians")
+data("genotypes_Carpathians")
 data("samples_Carpathians")
 
-gengroups_carpat <- genetic_groups(Bruvo_Carpathians, threshold = 0.7, estimator = "1-Bruvo")
+rel_carpat <- relatedness(genotypes_Carpathians,
+                          freq_ids = setdiff(genotypes_Carpathians$Individual, "EF.15J8"))
+gengroups_carpat <- genetic_groups(rel_carpat, estimator = "QG", threshold = 0.25, method = "leiden")
 obs_carpat <- merge(samples_Carpathians, gengroups_carpat, by = "Individual")
 plot_packs(obs_carpat, group)
 ```

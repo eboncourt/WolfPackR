@@ -72,3 +72,50 @@ test_that("genetic_groups gives the same groups with one row per pair as with th
   from_half <- from_half[order(from_half$Individual), ]
   expect_equal(same_group(full), same_group(from_half))
 })
+
+# Two families of 4 joined by a single weak link: the classic case where connected components merge them
+two_families <- function() {
+  fam <- function(ids) { p <- t(utils::combn(ids, 2)); data.frame(ind1 = p[, 1], ind2 = p[, 2], r = 0.5) }
+  rbind(fam(c("A1", "A2", "A3", "A4")), fam(c("B1", "B2", "B3", "B4")),
+        data.frame(ind1 = "A1", ind2 = "B1", r = 0.3),          # one spurious link between the families
+        data.frame(ind1 = "Z", ind2 = "A2", r = 0.05))          # and someone unrelated to everybody
+}
+
+test_that("community detection splits two families that components merge", {
+  rel <- two_families()
+  comp <- genetic_groups(rel, "r", 0.25)
+  expect_equal(length(unique(comp$group[comp$Individual != "Z"])), 1)
+  for (m in c("leiden", "louvain", "walktrap")) {
+    res <- genetic_groups(rel, "r", 0.25, method = m)
+    expect_equal(nrow(res), 9)
+    g <- stats::setNames(res$group, res$Individual)
+    expect_equal(length(unique(g[c("A1", "A2", "A3", "A4")])), 1)
+    expect_equal(length(unique(g[c("B1", "B2", "B3", "B4")])), 1)
+    expect_false(g["A1"] == g["B1"])
+    expect_false(g["Z"] %in% g[names(g) != "Z"])           # the unrelated one stays alone
+  }
+})
+
+test_that("genetic_groups is reproducible and leaves the user's random numbers alone", {
+  rel <- two_families()
+  set.seed(123); before <- stats::runif(1)
+  set.seed(123)
+  a <- genetic_groups(rel, "r", 0.25, method = "louvain")
+  after <- stats::runif(1)
+  expect_equal(before, after)
+  expect_equal(a, genetic_groups(rel, "r", 0.25, method = "louvain"))
+})
+
+test_that("genetic_groups copes with no pair above the threshold, and can draw the graph", {
+  rel <- two_families()
+  res <- genetic_groups(rel, "r", 0.9)
+  expect_equal(length(unique(res$group)), 9)
+  grDevices::pdf(NULL); on.exit(grDevices::dev.off())
+  expect_no_error(genetic_groups(rel, "r", 0.25, plot = TRUE))
+})
+
+test_that("genetic_groups refuses non-positive links, whatever the method", {
+  rel <- rbind(two_families(), data.frame(ind1 = "Z", ind2 = "B2", r = -0.2))   # QG or LR can be negative
+  expect_error(genetic_groups(rel, "r", -1, method = "leiden"), "positive weights")
+  expect_error(genetic_groups(rel, "r", -1), "positive weights")
+})

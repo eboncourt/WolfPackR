@@ -4,22 +4,55 @@
 \alias{genetic_groups}
 \title{Identify Genetic Groups}
 \usage{
-genetic_groups(relate, estimator, threshold = 0.4)
+genetic_groups(
+  relate,
+  estimator,
+  threshold = 0.4,
+  method = c("components", "leiden", "louvain", "walktrap"),
+  seed = 1,
+  plot = FALSE
+)
 }
 \arguments{
-\item{relate}{A data.frame with columns: \code{ind1}, \code{ind2}, and the estimator column. Based on the output format of the \code{coancestry} function of the \code{related} package (Pew et al., 2015).}
+\item{relate}{A data.frame with columns \code{ind1}, \code{ind2} and the estimator column, e.g. the output of
+\code{\link[=relatedness]{relatedness()}} or of the \code{coancestry} function of the \code{related} package (Pew et al., 2015).
+One row per pair is enough, in any order.}
 
 \item{estimator}{The name of the column in \code{relate} containing relatedness estimates.}
 
-\item{threshold}{The minimum relatedness value to consider for grouping (default: 0.4).}
+\item{threshold}{The minimum relatedness value to consider for grouping (default: 0.4).
+Pick it according to the estimator: for QG or LR, 0.25 is the value expected for second-degree relatives
+(0.5 for first-degree ones), so pairs above it are likely close kin; for a LOD, 3 is a classic choice.
+Must be >= 0 when the estimator can be negative (QG, LR): a relatedness <= 0 can't be a kin link.}
+
+\item{method}{How groups are built from the graph:
+\itemize{
+\item \code{"components"} (default, behaviour of earlier versions): connected components, i.e. two individuals
+end up together as soon as a chain of links joins them. Simple, but a single spurious link merges two families;
+\item \code{"leiden"}, \code{"louvain"}, \code{"walktrap"}: community detection (igraph), which looks for densely linked
+groups and is much less sensitive to isolated links. Leiden and Louvain maximise modularity.
+}}
+
+\item{seed}{Random seed for the stochastic methods (Leiden, Louvain), so results are reproducible.
+Your own random number stream is left untouched. \code{NULL} to skip.}
+
+\item{plot}{Draw the graph of genetic relationships (default: FALSE).}
 }
 \value{
-An \code{sf} object with individuals and their assigned genetic groups.
+A data.frame with one row per individual: \code{Individual} and its \code{group} (integer).
+Individuals without any link above the threshold get a group of their own.
 }
 \description{
-Identifies genetic groups from a pairwise relatedness matrix using a graph-based approach.
+Identifies genetic groups from pairwise relatedness: pairs above \code{threshold} become the edges
+of a graph (weighted by relatedness), then groups are found either as connected components or with a
+community detection algorithm.
 }
 \examples{
 relate <- data.frame(ind1 = c("W1", "W1", "W1", "W2", "W2", "W3"), ind2 = c("W1", "W2", "W3", "W2", "W3", "W3"), indicator = c(1.0, 0.5, 0.2, 1.0, 0.3, 1.0))
 result <- genetic_groups(relate, estimator = "indicator", threshold = 0.4)
+
+# With relatedness computed from genotypes and community detection
+data("genotypes_Carpathians")
+rel <- relatedness(genotypes_Carpathians)
+groups <- genetic_groups(rel, estimator = "QG", threshold = 0.25, method = "leiden")
 }
