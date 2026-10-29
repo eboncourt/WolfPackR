@@ -11,17 +11,22 @@
 #'   (0.5 for first-degree ones), so pairs above it are likely close kin; for a LOD, 3 is a classic choice.
 #'   Must be >= 0 when the estimator can be negative (QG, LR): a relatedness <= 0 can't be a kin link.
 #' @param method How groups are built from the graph:
-#'   * `"components"` (default, behaviour of earlier versions): connected components, i.e. two individuals
-#'     end up together as soon as a chain of links joins them. Simple, but a single spurious link merges two families;
-#'   * `"leiden"`, `"louvain"`, `"walktrap"`: community detection (igraph), which looks for densely linked
-#'     groups and is much less sensitive to isolated links. Leiden and Louvain maximise modularity.
+#'   * `"leiden"` (default since 1.0.0), `"louvain"`, `"walktrap"`: community detection (igraph), which looks for
+#'     densely linked groups and is much less sensitive to isolated links. Leiden and Louvain maximise modularity;
+#'   * `"components"` (default before 1.0.0): connected components, i.e. two individuals end up together as soon as
+#'     a chain of links joins them. Simple, but a single spurious link merges two families.
 #' @param seed Random seed for the stochastic methods (Leiden, Louvain), so results are reproducible.
 #'   Your own random number stream is left untouched. `NULL` to skip.
 #' @param plot Draw the graph of genetic relationships (default: FALSE).
+#' @param n_null Number of randomised graphs for the null model (default: 0, no test). The links are rewired
+#'   keeping the number of links of each individual, their weights shuffled, and groups detected again with the
+#'   same method: the observed modularity is then compared with these random ones.
 #' @return A data.frame with one row per individual: `Individual` and its `group` (integer).
 #'   Individuals without any link above the threshold get a group of their own.
-#' @importFrom igraph graph_from_adjacency_matrix plot.igraph components cluster_leiden cluster_louvain cluster_walktrap membership V
-#' @importFrom dplyr rows_patch filter mutate row_number %>% select across .data
+#'   With `n_null > 0`, `attr(, "modularity")` holds the observed modularity `Q`, the mean and sd of the null
+#'   modularities, the z-score and a permutation p-value.
+#' @importFrom igraph graph_from_adjacency_matrix plot.igraph components cluster_leiden cluster_louvain cluster_walktrap membership V E modularity rewire keeping_degseq ecount
+#' @importFrom dplyr rows_patch filter mutate row_number %>% select across .data all_of
 #' @importFrom stats xtabs
 #' @export
 #' @examples
@@ -31,9 +36,11 @@
 #' # With relatedness computed from genotypes and community detection
 #' data("genotypes_Carpathians")
 #' rel <- relatedness(genotypes_Carpathians)
-#' groups <- genetic_groups(rel, estimator = "QG", threshold = 0.25, method = "leiden")
+#' groups <- genetic_groups(rel, estimator = "QG", threshold = 0.25, n_null = 99)
+#' attr(groups, "modularity")
 genetic_groups <- function(relate, estimator, threshold = 0.4,
-                           method = c("components", "leiden", "louvain", "walktrap"), seed = 1, plot = FALSE) {
+                           method = c("leiden", "louvain", "walktrap", "components"), seed = 1, plot = FALSE,
+                           n_null = 0) {
   method <- match.arg(method)
 
   # list of individuals
@@ -42,7 +49,7 @@ genetic_groups <- function(relate, estimator, threshold = 0.4,
   # Filter and format the relatedness matrix
   relate <- relate %>%
     mutate(across(c(ind1, ind2), as.character)) %>%  # Convert to character to avoid problems with factors in dplyr
-    select(ind1, ind2, {{estimator}}) %>%
+    select(ind1, ind2, all_of(estimator)) %>%        # all_of(): the estimator column is given as text
     filter(.data[[estimator]] > threshold)
 
   # Links need a positive weight: a relatedness <= 0 can't mean kinship, and igraph versions don't agree
@@ -72,19 +79,21 @@ genetic_groups <- function(relate, estimator, threshold = 0.4,
   g <- graph_from_adjacency_matrix(relate, weighted = TRUE, diag = FALSE, mode = "max")
   if (plot) plot.igraph(g, main = "Graph of Genetic Relationships")
 
-  # Detect groups: connected components, or communities (weighted by relatedness)
-  if (!is.null(seed) && method %in% c("leiden", "louvain")) {
-    old_seed <- if (exists(".Random.seed", envir = globalenv())) get(".Random.seed", envir = globalenv()) else NULL
-    on.exit(if (is.null(old_seed)) rm(".Random.seed", envir = globalenv()) else assign(".Random.seed", old_seed, envir = globalenv()))
-    set.seed(seed)
-  }
-  memb <- switch(method,
-    components = components(g)$membership,
-    leiden     = membership(cluster_leiden(g, objective_function = "modularity", n_iterations = -1)),
-    louvain    = membership(cluster_louvain(g)),
-    walktrap   = membership(cluster_walktrap(g))
-  )
+  # Detect groups: communities (weighted by relatedness) or connected components
+  memb <- .with_seed(seed, .communities(g, method))
   dec <- data.frame(group = as.integer(memb), Individual = V(g)$name)
+
+  # Null model: same number of links per individual, links rewired at random and weights shuffled
+  if (n_null > 0) {
+    Q <- modularity(g, memb, weights = E(g)$weight)
+    Q_null <- .with_seed(seed, vapply(seq_len(n_null), function(k) {
+      gr <- rewire(g, keeping_degseq(niter = 10 * ecount(g)))
+      gr <- igraph::set_edge_attr(gr, "weight", value = sample(E(g)$weight))
+      modularity(gr, .communities(gr, method), weights = E(gr)$weight)
+    }, numeric(1)))
+    mod <- c(Q = Q, null_mean = mean(Q_null), null_sd = stats::sd(Q_null),
+             z = (Q - mean(Q_null)) / stats::sd(Q_null), p = (1 + sum(Q_null >= Q)) / (n_null + 1))
+  }
 
   # Handle individuals without a group
   indiv_without_group <- subset(indiv_list, !(indiv_list$Individual %in% dec$Individual))
@@ -97,5 +106,16 @@ genetic_groups <- function(relate, estimator, threshold = 0.4,
     groups <- merge(x = indiv_list, y = dec, by = "Individual", all.x = TRUE)
   }
 
+  if (n_null > 0) attr(groups, "modularity") <- mod
   return(groups)
+}
+
+# Groups of a graph by community detection (weighted) or connected components
+.communities <- function(g, method) {
+  if (ecount(g) == 0) return(seq_len(igraph::vcount(g)))                 # no link at all: everyone on their own
+  switch(method,
+    components = components(g)$membership,
+    leiden     = membership(cluster_leiden(g, objective_function = "modularity", n_iterations = -1)),
+    louvain    = membership(cluster_louvain(g)),
+    walktrap   = membership(cluster_walktrap(g)))
 }

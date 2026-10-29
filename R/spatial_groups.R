@@ -1,152 +1,105 @@
-#' @title Identify spatial groups or subgroups
-#' @description This function identifies spatial groups or subgroups within groups using Minimum Convex Polygons (MCP) and clustering based on spatial overlap.
-#' @param obs An sf object containing the observations, with columns for individual IDs and coordinates.
-#' @param group The name of the column in `obs` that contains the group information. If not provided, all individuals are treated as a single group.
-#' @param percentile The percentile for the MCP calculation (e.g., 95 for 95% MCP).
-#' @param buffer_radius The buffer radius used around individuals with fewer than 3 points, in metres for geographic (lon/lat) data and in map units otherwise.
-#' @param max_iterations The maximum number of iterations for subgroup identification.
-#' @param min_mcp_overlap The minimum spatial overlap (between 0 and 1) required to consider two MCPs as linked (default: 0.5).
-#' @return A data.frame with one row per individual and its updated subgroup assignment.
-#' @importFrom dplyr filter .data
-#' @importFrom igraph graph_from_adjacency_matrix components
-#' @examples
-#' # Example usage:
-#' data("samples")
-#' subgroups_result <-  spatial_groups(samples, percentile = 100, buffer_radius = 0.00001, max_iterations = 20, min_mcp_overlap = 0.5)
+#' @title Split groups into spatially coherent packs
+#' @description Within each group (e.g. the groups from [assign_individuals()]), finds the sets of individuals that
+#'   share the same space, so that a family spread over two neighbouring territories gives two packs.
+#'
+#'   1. **Core individuals** (at least `min_samples` samples and not wide-ranging) are linked by the overlap of their
+#'      UDs (Bhattacharyya's affinity, [ud_overlap()]); links below `min_affinity` are dropped.
+#'   2. **Communities** are detected on this weighted graph (Leiden by default), which is much less prone than
+#'      connected components to chain neighbouring territories through a single individual.
+#'   3. **Merge**: two subgroups whose UDs overlap more than `merge` (affinity) are merged back, so a territory
+#'      is not cut in two just because of its internal structure.
+#'   4. **The other members** (few samples, wide-ranging) join the subgroup where most of their samples fall
+#'      ([attribute_samples()]), or none.
+#'   5. Subgroups with fewer than `min_group_size` individuals are dropped (a pair is enough by default).
+#'
+#'   Individuals without a group (`NA`, e.g. Transient or Undetermined) are pooled and go through the same steps:
+#'   that's how a territory held by unrelated individuals (e.g. a new pair whose pups were not sampled) can show up.
+#' @param obs An `sf` object of points (one row per sample) with an `Individual` column.
+#' @param group Name of the column giving the group of each individual (`NA` = no group). `NULL`: everybody in a
+#'   single group, i.e. a purely spatial analysis.
+#' @param ud A `wolfpack_ud` object from [space_use()]; computed from `obs` if `NULL`.
+#' @param h Bandwidth passed to [space_use()] when `ud` is `NULL`.
+#' @param method Community detection: `"leiden"` (default), `"louvain"`, `"walktrap"` or `"components"`.
+#' @param min_affinity Overlaps below this value are not links (default: 0.1).
+#' @param merge Subgroups overlapping more than this are merged (default: 0.5).
+#' @param min_samples Minimum number of samples of a core individual (default: 3).
+#' @param min_group_size Minimum number of individuals in a pack (default: 2).
+#' @param wide,period Wide-ranging individuals (radius of gyration above `wide` x h, measured within each `period`
+#'   if given) are not core individuals (default `wide`: 3).
+#' @param min_share Share of the samples needed for a non-core individual to join a pack (default: 0.5).
+#' @param seed Random seed for Leiden and Louvain (your own random numbers are left alone).
+#' @return A data.frame with one row per individual: `Individual`, `Group`, `Pack` (`NA` = no pack) and `Core`.
 #' @export
-spatial_groups <- function(obs, group = NULL, percentile = 100, buffer_radius = 1, max_iterations = 20, min_mcp_overlap = 0.5) {
-  # Initialize results
-  results <- data.frame(
-    Individual = obs$Individual,
-    Group = NA,
-    Subgroup = "All_Individuals",
-    stringsAsFactors = FALSE
-  )
-
-  # If group is provided, use it; otherwise, treat all individuals as a single group
+#' @examples
+#' data("samples_Carpathians")
+#' # purely spatial analysis, no genetics
+#' sg <- spatial_groups(samples_Carpathians)
+#' table(sg$Pack, useNA = "ifany")
+spatial_groups <- function(obs, group = NULL, ud = NULL, h = NULL,
+                           method = c("leiden", "louvain", "walktrap", "components"),
+                           min_affinity = 0.1, merge = 0.5, min_samples = 3, min_group_size = 2,
+                           wide = 3, period = NULL, min_share = 0.5, seed = 1) {
+  method <- match.arg(method)
   if (!is.null(group)) {
-    group_name <- group
-    results$Group <- obs[[group_name]]
-    groups <- unique(obs[[group_name]])
-  } else {
-    groups <- "All_Individuals"
-    results$Group <- "All_Individuals"
+    group <- .col_name(substitute(group), function() group, names(obs))
+    if (!group %in% names(obs)) stop("Column '", group, "' not found in 'obs'.")
   }
-  for (gengroup in groups) {
-    if (!is.null(group)) {
-      group_obs <- obs %>% dplyr::filter(.data[[group_name]] == gengroup)
-    } else {
-      group_obs <- obs
+  if (is.null(ud)) ud <- space_use(obs, h = h)
+  ids <- ud$ids
+  grp <- if (is.null(group)) stats::setNames(rep("", length(ids)), ids) else
+    tapply(as.character(obs[[group]]), as.character(obs$Individual), function(x) x[1])[ids]
+  grp_key <- ifelse(is.na(grp), "new", grp)                                # individuals without a group are pooled
+  is_wide <- .wide_ranging(ud, wide, period)
+  core_ok <- ud$n[ids] >= min_samples & !is_wide[ids]
+  BA <- ud_overlap(ud, "BA")
+
+  # UD affinity between two sets of individuals
+  set_affinity <- function(a, b) sum(sqrt(.mix_ud(ud, a) * .mix_ud(ud, b)))
+
+  pack <- stats::setNames(rep(NA_character_, length(ids)), ids)
+  for (g in unique(grp_key)) {
+    members <- ids[grp_key == g]
+    core <- members[core_ok[members]]
+
+    # Communities of core individuals on the overlap graph
+    subs <- if (length(core) >= 3) {
+      W <- BA[core, core]; W[W < min_affinity] <- 0; diag(W) <- 0
+      gr <- igraph::graph_from_adjacency_matrix(W, mode = "undirected", weighted = TRUE, diag = FALSE)
+      memb <- .with_seed(seed, .communities(gr, method))
+      split(core, memb)
+    } else if (length(core)) list(core) else list()
+
+    # Merge back the subgroups that overlap a lot, the most overlapping pair first
+    while (length(subs) >= 2) {
+      pr <- utils::combn(length(subs), 2)
+      aff <- apply(pr, 2, function(p) set_affinity(subs[[p[1]]], subs[[p[2]]]))
+      if (max(aff) <= merge) break
+      p <- pr[, which.max(aff)]
+      subs[[p[1]]] <- c(subs[[p[1]]], subs[[p[2]]]); subs[[p[2]]] <- NULL
     }
+    if (!length(subs)) next
+    names(subs) <- paste0("s", seq_along(subs))
 
-    group_individuals <- unique(group_obs$Individual)
-
-    # Calculate initial MCP for the group
-    mcp_group <- mcp_sf(group_obs, percentile, buffer_radius)
-
-    # If the MCP cannot be calculated, all individuals are marked as "Lone Individual"
-    if (is.null(mcp_group)) {
-      results$Subgroup[results$Individual %in% group_individuals] <- "Lone Individual"
-      next
-    }
-
-    # Identify spatial subgroups
-    subgroups_list <- list(group_individuals)
-    subgroup_mcps <- list(mcp_group)
-
-    stable <- FALSE
-    iteration <- 0
-
-    while (!stable && iteration < max_iterations) {
-
-      stable <- TRUE
-      new_subgroups <- list()
-      new_subgroup_mcps <- list()
-
-      # For each existing subgroup
-      for (i in seq_along(subgroups_list)) {
-        current_subgroup <- subgroups_list[[i]]
-        current_mcp <- if (i <= length(subgroup_mcps)) subgroup_mcps[[i]] else NULL
-
-        # If the subgroup has fewer than 3 individuals, keep it as is.
-        if (length(current_subgroup) < 3) {
-          new_subgroups <- c(new_subgroups, list(current_subgroup))
-          new_subgroup_mcps <- c(new_subgroup_mcps, list(current_mcp))
-          next
-        }
-
-        # Calculation of individual MCPs
-        individual_mcps <- lapply(current_subgroup, function(ind) {
-          ind_obs <- obs %>% dplyr::filter(Individual == ind)
-          mcp_sf(ind_obs, percentile, buffer_radius)
-        })
-        names(individual_mcps) <- current_subgroup
-
-        # Calculation of the overlap matrix
-        overlap_matrix <- matrix(0, nrow = length(current_subgroup), ncol = length(current_subgroup))
-        for (j in seq_along(current_subgroup)) {
-          for (k in seq_along(current_subgroup)) {
-            if (j != k) {
-              overlap_value <- calculate_overlap(individual_mcps[[j]], individual_mcps[[k]])
-              if (is.numeric(overlap_value) && length(overlap_value) == 1 && overlap_value >= min_mcp_overlap) {
-                overlap_matrix[j, k] <- 1
-              } else {
-                overlap_matrix[j, k] <- 0
-              }
-            }
-          }
-        }
-
-        # Clustering of individuals
-        diag(overlap_matrix) <- 1
-        graph <- igraph::graph_from_adjacency_matrix(overlap_matrix, weighted = TRUE, mode = "undirected", diag = FALSE)
-        clusters <- igraph::components(graph)
-
-        # Creation of new subgroups
-        for (cluster_id in unique(clusters$membership)) {
-          cluster_members <- current_subgroup[clusters$membership == cluster_id]
-          new_subgroups <- c(new_subgroups, list(cluster_members))
-          new_mcp <- mcp_sf(obs %>% dplyr::filter(Individual %in% cluster_members), percentile, buffer_radius)
-          new_subgroup_mcps <- c(new_subgroup_mcps, list(new_mcp))
-        }
-      }
-
-      # Stability check
-      same_groups <- length(new_subgroups) == length(subgroups_list)
-      if (same_groups) {
-        for (i in seq_along(new_subgroups)) {
-          if (!setequal(new_subgroups[[i]], subgroups_list[[i]])) {
-            same_groups <- FALSE
-            break
-          }
-        }
-      }
-      stable <- same_groups
-
-      # Updating subgroups
-      subgroups_list <- new_subgroups
-      subgroup_mcps <- new_subgroup_mcps
-      iteration <- iteration + 1
-    }
-
-    # Assign spatial subgroups to results
-    for (i in seq_along(subgroups_list)) {
-      if (length(subgroups_list[[i]]) >= 2) {
-        if (!is.null(group)) {
-          results$Subgroup[results$Individual %in% subgroups_list[[i]]] <- paste0(gengroup, "_Subgroup_", i)
-        } else {
-          results$Subgroup[results$Individual %in% subgroups_list[[i]]] <- paste0("Subgroup_", i)
-        }
-      } else {
-        results$Subgroup[results$Individual %in% subgroups_list[[i]]] <- "Lone Individual"
+    # The other members join the subgroup where most of their samples fall
+    others <- setdiff(members, unlist(subs))
+    if (length(others)) {
+      att <- attribute_samples(ud, subs)
+      for (i in others) {
+        m <- .majority(att$Territory[att$Individual == i], min_share)
+        if (!is.na(m) && m != "outside") subs[[m]] <- c(subs[[m]], i)
       }
     }
+
+    # Keep the subgroups big enough, and name them
+    subs <- subs[lengths(subs) >= min_group_size]
+    if (!length(subs)) next
+    lab <- if (length(subs) == 1) g else paste0(g, if (g != "") ".", seq_along(subs))
+    if (g == "") lab <- if (length(subs) == 1) "1" else as.character(seq_along(subs))
+    for (k in seq_along(subs)) pack[subs[[k]]] <- lab[k]
   }
 
-  # One row per individual (results was built from obs, so one row per sample until now);
-  # this keeps merge(samples, result, by = "Individual") from blowing up into a cartesian product
-  results <- unique(results)
-  rownames(results) <- NULL
-
-  return(results)
+  out <- data.frame(Individual = ids, Group = unname(if (is.null(group)) NA_character_ else grp),
+                    Pack = unname(pack), Core = unname(core_ok[ids]), stringsAsFactors = FALSE)
+  rownames(out) <- NULL
+  out
 }

@@ -37,3 +37,10 @@ test_that("every sample sits in the study area (no 0, 0 coordinates)", {
     expect_true(all(xy[, "Y"] > 45 & xy[, "Y"] < 46), label = paste(nm, "latitudes"))
   }
 })
+
+test_that("reference_Carpathians lists 41 wolves of the package in 6 packs", {
+  ref <- pkg_data("reference_Carpathians")
+  expect_equal(nrow(ref), 41)
+  expect_setequal(unique(ref$Pack), letters[1:6])
+  expect_true(all(ref$Individual %in% pkg_data("samples_Carpathians")$Individual))
+})

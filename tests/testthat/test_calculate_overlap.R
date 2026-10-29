@@ -1,3 +1,6 @@
+# Deprecated since 1.0.0: called without the deprecation warning so the old tests still check the old behaviour
+calculate_overlap <- function(...) quiet_deprecated(WolfPackR::calculate_overlap(...))
+
 square <- function(xmin, ymin, xmax, ymax, crs = 4326) {
   sf::st_as_sfc(sf::st_bbox(c(xmin = xmin, ymin = ymin, xmax = xmax, ymax = ymax), crs = crs))
 }

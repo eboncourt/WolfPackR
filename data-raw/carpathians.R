@@ -94,6 +94,29 @@ load("data/Bruvo_Carpathians.rda")
 Bruvo_Carpathians <- Bruvo_Carpathians[Bruvo_Carpathians$ind1 %in% wolves & Bruvo_Carpathians$ind2 %in% wolves, ]
 rownames(Bruvo_Carpathians) <- NULL
 
+# --- Reference packs of Iosif et al. (2025), read by hand on their Fig. 3 (parentage with COLONY + movements)
+# Only the 41 individuals involved in a parent-offspring link are on the figure; a few labels are doubtful (Note)
+reference_Carpathians <- data.frame(
+  Individual = c("CC01ET", "EK.18AU", "CC01EC", "CC01EE", "CC01EH",
+                 "CC00T7", "CC00T6", "CC01F1", "CC0655", "CC0630", "CC064U", "CC04FK",
+                 "CC00X0", "CC00TC", "CC01EU", "CC01CY", "CC0666", "CC04K4", "CC04AU", "CC04EK", "CC01CJ", "CC01FE", "CC01F2",
+                 "CC025E", "CC024X", "CC01AY", "CC01EP", "CC03E3", "CC00JK", "CC00JM", "CC05X7",
+                 "CC063M", "CC063J", "EF.15J8",
+                 "CC04C0", "CC04JC", "CC03KH", "CC0637", "CC04H8", "CC066H", "CC05X0"),
+  Pack = rep(c("a", "b", "c", "d", "e", "f"), times = c(5, 7, 11, 8, 3, 7)),
+  stringsAsFactors = FALSE
+)
+reference_Carpathians$PackName <- c(a = "Sercaita", b = "Dambovita-Barsa", c = "Piatra Craiului",
+                                    d = "Dambovita-Raul Targului", e = "Stoenesti hybrids", f = "Stoenesti")[reference_Carpathians$Pack]
+reference_Carpathians$Breeder <- c("M", "", "", "", "",  "F", "F", "M", "", "", "", "",  "F", "M", "M", rep("", 8),
+                                   "M", "F", rep("", 6),  "F", "", "",  "F", "M", rep("", 5))
+reference_Carpathians$Note <- ""
+reference_Carpathians$Note[reference_Carpathians$Individual == "CC01EU"] <- "labelled both as breeder and as offspring"
+reference_Carpathians$Note[reference_Carpathians$Individual %in% c("CC0655", "CC01F2")] <- "on the edge of two territories"
+reference_Carpathians$Note[reference_Carpathians$Individual == "CC05X0"] <- "outside the ellipses, between e and f"
+stopifnot(all(reference_Carpathians$Individual %in% wolves))
+
 # --- Save (version 2 so older R versions can still read them; no LazyData in this package)
-for (nm in c("samples_Carpathians", "effort_Carpathians", "genotypes_Carpathians", "relate_Carpathians", "Bruvo_Carpathians"))
+for (nm in c("samples_Carpathians", "effort_Carpathians", "genotypes_Carpathians", "relate_Carpathians", "Bruvo_Carpathians",
+             "reference_Carpathians"))
   save(list = nm, file = file.path("data", paste0(nm, ".rda")), compress = "xz", version = 2)

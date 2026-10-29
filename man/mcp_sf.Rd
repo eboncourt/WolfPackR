@@ -2,7 +2,7 @@
 % Please edit documentation in R/mcp_sf.R
 \name{mcp_sf}
 \alias{mcp_sf}
-\title{Calculate Minimum Convex Polygon (MCP) with Percentile Filtering}
+\title{Calculate Minimum Convex Polygon (MCP) with Percentile Filtering (deprecated)}
 \usage{
 mcp_sf(data, percentile = 100, buffer_radius = 0.01)
 }
@@ -17,6 +17,9 @@ mcp_sf(data, percentile = 100, buffer_radius = 0.01)
 An \code{sfc} polygon with the same CRS as \code{data}: the MCP, or a buffer around the points when no MCP can be computed.
 }
 \description{
+Deprecated in WolfPackR 1.0.0 and to be removed in 1.1: territories are now estimated by kernel
+density, see \code{\link[=space_use]{space_use()}} and \code{\link[=isopleth]{isopleth()}}.
+
 Computes the MCP for a set of spatial points using \code{sf}, keeping only the points within a given percentile of distance from the centroid. Largely inspired by juoe (https://rdrr.io/github/juoe/sdmflow/).
 }
 \examples{

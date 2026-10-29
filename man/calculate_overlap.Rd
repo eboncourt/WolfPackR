@@ -2,7 +2,7 @@
 % Please edit documentation in R/calculate_overlap.R
 \name{calculate_overlap}
 \alias{calculate_overlap}
-\title{Calculate Overlap Between Two Polygons}
+\title{Calculate Overlap Between Two Polygons (deprecated)}
 \usage{
 calculate_overlap(mcp1, mcp2)
 }
@@ -15,6 +15,10 @@ calculate_overlap(mcp1, mcp2)
 A numeric value between 0 and 1: the area of the intersection divided by the area of \code{mcp2}.
 }
 \description{
+Deprecated in WolfPackR 1.0.0 and to be removed in 1.1: overlaps are now computed between kernel densities,
+see \code{\link[=ud_overlap]{ud_overlap()}}.
+}
+\details{
 This function calculates the overlap ratio between two polygons.
 It handles edge cases such as NULL inputs, empty intersections, and non-polygon geometries.
 }

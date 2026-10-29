@@ -1,4 +1,7 @@
-#' Calculate Overlap Between Two Polygons
+#' Calculate Overlap Between Two Polygons (deprecated)
+#'
+#' Deprecated in WolfPackR 1.0.0 and to be removed in 1.1: overlaps are now computed between kernel densities,
+#' see [ud_overlap()].
 #'
 #' This function calculates the overlap ratio between two polygons.
 #' It handles edge cases such as NULL inputs, empty intersections, and non-polygon geometries.
@@ -17,6 +20,8 @@
 #' @importFrom sf st_intersection st_area st_buffer st_geometry_type st_crs
 #' @export
 calculate_overlap <- function(mcp1, mcp2) {
+  .Deprecated("ud_overlap", package = "WolfPackR",
+              msg = "calculate_overlap() is deprecated and will be removed in WolfPackR 1.1: use ud_overlap() instead.")
   # Check inputs
   if (is.null(mcp1) || is.null(mcp2)) {
     return(0)

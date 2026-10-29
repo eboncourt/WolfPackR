@@ -4,31 +4,30 @@
 \alias{plot_packs}
 \title{Plot Packs Interactively}
 \usage{
-plot_packs(obs, pack)
+plot_packs(obs, pack = "Pack", ud = NULL, h = NULL, levels = c(0.95, 0.5))
 }
 \arguments{
-\item{obs}{An \code{sf} object with individuals and their packs.}
+\item{obs}{An \code{sf} object of points (one row per sample) with \code{Individual} and the pack column.}
 
-\item{pack}{The name of the column in \code{obs} that contains the pack information.}
+\item{pack}{Name of the pack column (default \code{"Pack"}; a bare name works too, as in older scripts).
+\code{NA} or \code{"Lone Individual"} = no pack.}
+
+\item{ud}{A \code{wolfpack_ud} object from \code{\link[=space_use]{space_use()}}; computed from \code{obs} if \code{NULL}.}
+
+\item{h}{Bandwidth passed to \code{\link[=space_use]{space_use()}} when \code{ud} is \code{NULL}.}
+
+\item{levels}{Isopleth levels drawn (default: 95\% territory and 50\% core area).}
 }
 \value{
 An interactive leaflet map.
 }
 \description{
-Creates an interactive map visualizing the packs territories.
+Interactive map of the packs: kernel territories (95\% isopleth, outlined) and core areas
+(50\% isopleth, filled), and the samples coloured by pack. Individuals without a pack are drawn in white.
+Clicking a sample shows the individual, its pack and, when there are such columns, its status and date.
 }
 \examples{
-data(samples)
-samples$pack <- NA
-samples[samples$Individual == "W1",]$pack <- "1"
-samples[samples$Individual == "W2",]$pack <- "1"
-samples[samples$Individual == "W3",]$pack <- "1"
-samples[samples$Individual == "W4",]$pack <- "Lone Individual"
-samples[samples$Individual == "W5",]$pack <- "2"
-samples[samples$Individual == "W6",]$pack <- "3"
-samples[samples$Individual == "W7",]$pack <- "2"
-samples[samples$Individual == "W8",]$pack <- "2"
-samples[samples$Individual == "W9",]$pack <- "3"
-map <- plot_packs(samples, pack = pack)
-map
+data("samples_Carpathians"); data("relate_Carpathians")
+res <- wolf_packs(samples_Carpathians, relate_Carpathians, "QG", 0.25)
+plot_packs(res$samples, "Pack", ud = res$ud)
 }

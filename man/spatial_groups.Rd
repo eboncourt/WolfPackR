@@ -2,38 +2,75 @@
 % Please edit documentation in R/spatial_groups.R
 \name{spatial_groups}
 \alias{spatial_groups}
-\title{Identify spatial groups or subgroups}
+\title{Split groups into spatially coherent packs}
 \usage{
 spatial_groups(
   obs,
   group = NULL,
-  percentile = 100,
-  buffer_radius = 1,
-  max_iterations = 20,
-  min_mcp_overlap = 0.5
+  ud = NULL,
+  h = NULL,
+  method = c("leiden", "louvain", "walktrap", "components"),
+  min_affinity = 0.1,
+  merge = 0.5,
+  min_samples = 3,
+  min_group_size = 2,
+  wide = 3,
+  period = NULL,
+  min_share = 0.5,
+  seed = 1
 )
 }
 \arguments{
-\item{obs}{An sf object containing the observations, with columns for individual IDs and coordinates.}
+\item{obs}{An \code{sf} object of points (one row per sample) with an \code{Individual} column.}
 
-\item{group}{The name of the column in \code{obs} that contains the group information. If not provided, all individuals are treated as a single group.}
+\item{group}{Name of the column giving the group of each individual (\code{NA} = no group). \code{NULL}: everybody in a
+single group, i.e. a purely spatial analysis.}
 
-\item{percentile}{The percentile for the MCP calculation (e.g., 95 for 95\% MCP).}
+\item{ud}{A \code{wolfpack_ud} object from \code{\link[=space_use]{space_use()}}; computed from \code{obs} if \code{NULL}.}
 
-\item{buffer_radius}{The buffer radius used around individuals with fewer than 3 points, in metres for geographic (lon/lat) data and in map units otherwise.}
+\item{h}{Bandwidth passed to \code{\link[=space_use]{space_use()}} when \code{ud} is \code{NULL}.}
 
-\item{max_iterations}{The maximum number of iterations for subgroup identification.}
+\item{method}{Community detection: \code{"leiden"} (default), \code{"louvain"}, \code{"walktrap"} or \code{"components"}.}
 
-\item{min_mcp_overlap}{The minimum spatial overlap (between 0 and 1) required to consider two MCPs as linked (default: 0.5).}
+\item{min_affinity}{Overlaps below this value are not links (default: 0.1).}
+
+\item{merge}{Subgroups overlapping more than this are merged (default: 0.5).}
+
+\item{min_samples}{Minimum number of samples of a core individual (default: 3).}
+
+\item{min_group_size}{Minimum number of individuals in a pack (default: 2).}
+
+\item{wide, period}{Wide-ranging individuals (radius of gyration above \code{wide} x h, measured within each \code{period}
+if given) are not core individuals (default \code{wide}: 3).}
+
+\item{min_share}{Share of the samples needed for a non-core individual to join a pack (default: 0.5).}
+
+\item{seed}{Random seed for Leiden and Louvain (your own random numbers are left alone).}
 }
 \value{
-A data.frame with one row per individual and its updated subgroup assignment.
+A data.frame with one row per individual: \code{Individual}, \code{Group}, \code{Pack} (\code{NA} = no pack) and \code{Core}.
 }
 \description{
-This function identifies spatial groups or subgroups within groups using Minimum Convex Polygons (MCP) and clustering based on spatial overlap.
+Within each group (e.g. the groups from \code{\link[=assign_individuals]{assign_individuals()}}), finds the sets of individuals that
+share the same space, so that a family spread over two neighbouring territories gives two packs.
+\enumerate{
+\item \strong{Core individuals} (at least \code{min_samples} samples and not wide-ranging) are linked by the overlap of their
+UDs (Bhattacharyya's affinity, \code{\link[=ud_overlap]{ud_overlap()}}); links below \code{min_affinity} are dropped.
+\item \strong{Communities} are detected on this weighted graph (Leiden by default), which is much less prone than
+connected components to chain neighbouring territories through a single individual.
+\item \strong{Merge}: two subgroups whose UDs overlap more than \code{merge} (affinity) are merged back, so a territory
+is not cut in two just because of its internal structure.
+\item \strong{The other members} (few samples, wide-ranging) join the subgroup where most of their samples fall
+(\code{\link[=attribute_samples]{attribute_samples()}}), or none.
+\item Subgroups with fewer than \code{min_group_size} individuals are dropped (a pair is enough by default).
+}
+
+Individuals without a group (\code{NA}, e.g. Transient or Undetermined) are pooled and go through the same steps:
+that's how a territory held by unrelated individuals (e.g. a new pair whose pups were not sampled) can show up.
 }
 \examples{
-# Example usage:
-data("samples")
-subgroups_result <-  spatial_groups(samples, percentile = 100, buffer_radius = 0.00001, max_iterations = 20, min_mcp_overlap = 0.5)
+data("samples_Carpathians")
+# purely spatial analysis, no genetics
+sg <- spatial_groups(samples_Carpathians)
+table(sg$Pack, useNA = "ifany")
 }

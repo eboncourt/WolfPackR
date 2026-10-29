@@ -1,3 +1,7 @@
+# Deprecated since 1.0.0: called without the deprecation warning so the old tests still check the old behaviour
+mcp_sf <- function(...) quiet_deprecated(WolfPackR::mcp_sf(...))
+calculate_overlap <- function(...) quiet_deprecated(WolfPackR::calculate_overlap(...))
+
 # load data
 samples <- pkg_data("samples")
 

@@ -83,7 +83,7 @@ two_families <- function() {
 
 test_that("community detection splits two families that components merge", {
   rel <- two_families()
-  comp <- genetic_groups(rel, "r", 0.25)
+  comp <- genetic_groups(rel, "r", 0.25, method = "components")
   expect_equal(length(unique(comp$group[comp$Individual != "Z"])), 1)
   for (m in c("leiden", "louvain", "walktrap")) {
     res <- genetic_groups(rel, "r", 0.25, method = m)
@@ -118,4 +118,19 @@ test_that("genetic_groups refuses non-positive links, whatever the method", {
   rel <- rbind(two_families(), data.frame(ind1 = "Z", ind2 = "B2", r = -0.2))   # QG or LR can be negative
   expect_error(genetic_groups(rel, "r", -1, method = "leiden"), "positive weights")
   expect_error(genetic_groups(rel, "r", -1), "positive weights")
+})
+
+test_that("leiden is the default method since 1.0.0", {
+  rel <- two_families()
+  expect_equal(genetic_groups(rel, "r", 0.25), genetic_groups(rel, "r", 0.25, method = "leiden"))
+})
+
+test_that("the null model gives a modularity well above random graphs for clear families", {
+  rel <- pkg_data("relate_Carpathians")
+  gg <- genetic_groups(rel, "QG", 0.25, n_null = 49)
+  mod <- attr(gg, "modularity")
+  expect_named(mod, c("Q", "null_mean", "null_sd", "z", "p"))
+  expect_gt(mod[["z"]], 3)
+  expect_lte(mod[["p"]], 0.05)
+  expect_null(attr(genetic_groups(rel, "QG", 0.25), "modularity"))   # no test unless asked
 })
