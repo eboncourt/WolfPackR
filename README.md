@@ -4,7 +4,7 @@
 # WolfPackR <img src="man/figures/logo.png" align="right" height="200" alt="Logo WolfPackR" />
 
 <!-- badges: start -->
-
+  [![DOI](https://zenodo.org/badge/1128449890.svg)](https://doi.org/10.5281/zenodo.23772098)
 <!-- badges: end -->
 
 WolfPackR identifies wolf packs, and the status of each individual, from genetic relatedness and the locations of non-invasive genetic samples (scats, urine, hair...). The typical workflow:
