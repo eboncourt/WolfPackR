@@ -44,3 +44,11 @@ test_that("reference_Carpathians lists 41 wolves of the package in 6 packs", {
   expect_setequal(unique(ref$Pack), letters[1:6])
   expect_true(all(ref$Individual %in% pkg_data("samples_Carpathians")$Individual))
 })
+
+test_that("the example datasets have their new names and the right format", {
+  r <- pkg_data("relate_example"); s <- pkg_data("samples_example")
+  expect_named(r, c("ind1", "ind2", "wang"))
+  expect_true(all(unique(c(r$ind1, r$ind2)) %in% s$Individual))
+  expect_s3_class(s, "sf")
+  expect_null(suppressWarnings(pkg_data("relate")))                     # old names are gone
+})

@@ -11,7 +11,7 @@ test_that("wolf_packs runs the whole workflow on the Carpathians and matches Ios
 })
 
 test_that("wolf_packs works on the toy data", {
-  res <- suppressMessages(wolf_packs(pkg_data("samples"), pkg_data("relate"), "wang", 0.4))
+  res <- suppressMessages(wolf_packs(pkg_data("samples_example"), pkg_data("relate_example"), "wang", 0.4))
   expect_equal(nrow(res$individuals), 9)
   expect_true(any(!is.na(res$individuals$Pack)))
 })

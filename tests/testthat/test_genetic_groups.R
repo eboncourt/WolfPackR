@@ -57,7 +57,7 @@ test_that("genetic_groups does not depend on the order of ind1 and ind2", {
 
 # Test 6: one row per pair in random order (like coancestry output) gives the same groups as the full matrix
 test_that("genetic_groups gives the same groups with one row per pair as with the full matrix", {
-  relate <- pkg_data("relate")
+  relate <- pkg_data("relate_example")
   full <- genetic_groups(relate, "wang", 0.4)
 
   half <- relate[as.character(relate$ind1) < as.character(relate$ind2), ]  # one row per pair

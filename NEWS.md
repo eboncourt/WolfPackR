@@ -19,12 +19,13 @@ Territories are now estimated by kernel density instead of minimum convex polygo
 * `assign_individuals()` replaces `ugly_ducklings()`: majority rule on the samples, iterated until stable, with statuses Resident, Putative disperser, Disperser (dated with `period`), Unrelated resident, Transient and Undetermined; relatives defined pair by pair; spread measured within each period; a low-data rule.
 * `pack_timeline()`: individuals and territories from one sampling period to the next (members detected, new and missed, stability, shift and overlap of each territory in each period).
 * `compare_partitions()`: ARI, NMI and share of individuals correctly placed against a reference.
-* `pack_stability()`: sensitivity to the settings and bootstrap of the samples.
+* `pack_stability()`: sensitivity to the settings, bootstrap of the samples and subsampling (`fraction`: keep only part of the samples, to check whether the sampling is dense enough).
 * `wolf_packs()`: the whole workflow in one call.
 * Null models: `genetic_groups(n_null = )` tests the modularity against random graphs (z-score); `summarise_packs(relate = )` tests the within-pack relatedness by permutation.
 
 ## Data
 
+* The example datasets `samples` and `relate` are renamed `samples_example` and `relate_example` (`relate` was also the name of an argument, and close to the `related` package).
 * New `reference_Carpathians`: packs of 41 wolves read on Fig. 3 of Iosif et al. (2025).
 
 ## Deprecated

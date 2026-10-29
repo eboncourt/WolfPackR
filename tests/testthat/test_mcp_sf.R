@@ -3,7 +3,7 @@ mcp_sf <- function(...) quiet_deprecated(WolfPackR::mcp_sf(...))
 calculate_overlap <- function(...) quiet_deprecated(WolfPackR::calculate_overlap(...))
 
 # load data
-samples <- pkg_data("samples")
+samples <- pkg_data("samples_example")
 
 test_that("mcp_sf returns a polygon for a regular set of points", {
   result <- mcp_sf(samples)

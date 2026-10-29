@@ -35,9 +35,9 @@ library(WolfPackR)
 Nine fictitious wolves, with Wang's relatedness:
 
 ```{r toy}
-data("samples")
-data("relate")
-toy <- wolf_packs(samples, relate, estimator = "wang", threshold = 0.4)
+data("samples_example")
+data("relate_example")
+toy <- wolf_packs(samples_example, relate_example, estimator = "wang", threshold = 0.4)
 toy
 toy$individuals[, c("Individual", "Genetic_Group", "Pack", "Status", "split")]
 plot_packs(toy$samples, "Pack", ud = toy$ud)
@@ -152,6 +152,14 @@ st <- pack_stability(samples_Carpathians, rel, "QG", 0.25,
                      n_boot = 10, reference = reference_Carpathians, period = "Campaign")
 st$runs
 head(st$individuals[order(st$individuals$stability), ])
+```
+
+Is the sampling dense enough? Subsampling keeps only part of the samples, as with a lighter field effort, and shows how fast the packs degrade:
+
+```{r subsampling}
+sub <- pack_stability(samples_Carpathians, rel, "QG", 0.25, fraction = c(0.9, 0.75, 0.5, 0.25), n_sub = 10,
+                      reference = reference_Carpathians, period = "Campaign")
+sub$subsampling
 ```
 
 # References

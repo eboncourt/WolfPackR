@@ -11,6 +11,8 @@ pack_stability(
   threshold,
   vary = list(),
   n_boot = 0,
+  fraction = NULL,
+  n_sub = 20,
   reference = NULL,
   seed = 1,
   ...
@@ -24,16 +26,26 @@ Any argument of \code{\link[=wolf_packs]{wolf_packs()}} works (\code{h}, \code{t
 
 \item{n_boot}{Number of bootstrap runs (default: 0).}
 
+\item{fraction}{Shares of the samples to keep for the subsampling runs, e.g. \code{c(0.75, 0.5)} (default: none).}
+
+\item{n_sub}{Number of runs per share in \code{fraction} (default: 20).}
+
 \item{reference}{Optional reference partition (see \code{\link[=compare_partitions]{compare_partitions()}}) to score every run.}
 
-\item{seed}{Random seed (community detection and bootstrap).}
+\item{seed}{Random seed (community detection, bootstrap and subsampling).}
 
 \item{...}{Other arguments of \code{\link[=wolf_packs]{wolf_packs()}}, fixed for all runs.}
 }
 \value{
-A list with \code{runs} (one row per run: settings, number of packs, individuals with a pack, ARI with the
-base run and, with \code{reference}, ARI with it), \code{individuals} (base pack, \code{stability}, share of runs with a pack)
-and \code{coassignment} (matrix).
+A list with:
+\itemize{
+\item \code{runs}: one row per run, with its type, settings, number of samples and of individuals sampled, number of
+packs, individuals with a pack, ARI with the base run and, with \code{reference}, ARI with it;
+\item \code{subsampling} (with \code{fraction}): one row per share, with the median and the 2.5\% and 97.5\% quantiles of
+these scores over its runs;
+\item \code{individuals}: base pack, \code{stability}, share of runs with a pack, number of runs where it was sampled;
+\item \code{coassignment}: matrix, share of runs where two individuals are in the same pack.
+}
 }
 \description{
 Runs \code{\link[=wolf_packs]{wolf_packs()}} many times and measures how much the packs change:
@@ -41,18 +53,26 @@ Runs \code{\link[=wolf_packs]{wolf_packs()}} many times and measures how much th
 \item \strong{sensitivity}: one run per combination of the settings given in \code{vary} (e.g. several bandwidths and
 relatedness thresholds), everything else at its base value;
 \item \strong{bootstrap}: \code{n_boot} runs where the samples of each individual are resampled with replacement
-(same number of samples per individual), to see the effect of sampling chance.
+(same number of samples per individual), to see the effect of sampling chance;
+\item \strong{subsampling} (rarefaction): for each share in \code{fraction}, \code{n_sub} runs keeping only that share of the
+samples, drawn at random. It mimics a lighter sampling effort: individuals with few samples drop out,
+territories are drawn from fewer points. Use it to check whether your sampling is dense enough: if the packs
+barely change when a quarter of the samples is removed, more sampling would probably not change them much
+either; if they fall apart, the sampling is close to the limit.
 }
 
-For each individual, \code{stability} is the mean, over all runs, of the Jaccard index between its pack mates in
-the base run and in that run (1 = always with the same companions). \code{coassignment} gives, for every pair,
-the share of runs where both are in the same pack.
+Bootstrap and subsampling runs keep the bandwidth of the base run (only the samples change).
+For each individual, \code{stability} is the mean, over the runs where it was sampled, of the Jaccard index between
+its pack mates in the base run and in that run (1 = always with the same companions). \code{coassignment} gives,
+for every pair, the share of runs where both are in the same pack.
 }
 \examples{
 \donttest{
 data("samples_Carpathians"); data("relate_Carpathians"); data("reference_Carpathians")
 st <- pack_stability(samples_Carpathians, relate_Carpathians, "QG", 0.25,
-                     vary = list(threshold = c(0.2, 0.25, 0.3)), n_boot = 10, reference = reference_Carpathians)
+                     vary = list(threshold = c(0.2, 0.25, 0.3)), n_boot = 10,
+                     fraction = c(0.75, 0.5), n_sub = 10, reference = reference_Carpathians)
 st$runs
+st$subsampling
 }
 }

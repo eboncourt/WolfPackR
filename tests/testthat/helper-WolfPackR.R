@@ -11,8 +11,8 @@ pkg_data <- function(name) {
 toy_obs <- function() {
   grDevices::pdf(NULL)                 # genetic_groups() draws the graph, keep it off-screen
   on.exit(grDevices::dev.off())
-  gg <- genetic_groups(pkg_data("relate"), threshold = 0.4, estimator = "wang")
-  merge(pkg_data("samples"), gg, by = "Individual")
+  gg <- genetic_groups(pkg_data("relate_example"), threshold = 0.4, estimator = "wang")
+  merge(pkg_data("samples_example"), gg, by = "Individual")
 }
 
 # n made-up samples of one individual, scattered around (x, y) in lon/lat,
