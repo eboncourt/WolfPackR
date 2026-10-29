@@ -1,7 +1,7 @@
 ---
 output: github_document
 ---
-
+[![DOI](https://zenodo.org/badge/1128449890.svg)](https://doi.org/10.5281/zenodo.23772098)
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 ```{r, include = FALSE}
