@@ -24,10 +24,13 @@
 #' @param merge Subgroups overlapping more than this are merged (default: 0.5).
 #' @param min_samples Minimum number of samples of a core individual (default: 3).
 #' @param min_group_size Minimum number of individuals in a pack (default: 2).
-#' @param wide,period Wide-ranging individuals (radius of gyration above `wide` x h, measured within each `period`
-#'   if given) are not core individuals (default `wide`: 3).
+#' @param wide,period,wide_trim Wide-ranging individuals (radius of gyration above `wide` x h, leaving out the
+#'   farthest `wide_trim` of their samples, measured within each `period` if given) are not core individuals
+#'   (defaults: `wide` 3, `wide_trim` 0.1; see [assign_individuals()]).
 #' @param min_share Share of the samples needed for a non-core individual to join a pack (default: 0.5).
 #' @param seed Random seed for Leiden and Louvain (your own random numbers are left alone).
+#' @param outside A non-core individual doesn't join a pack when most of its samples are "outside" (default: 1,
+#'   see [attribute_samples()]).
 #' @return A data.frame with one row per individual: `Individual`, `Group`, `Pack` (`NA` = no pack) and `Core`.
 #' @export
 #' @examples
@@ -38,7 +41,7 @@
 spatial_groups <- function(obs, group = NULL, ud = NULL, h = NULL,
                            method = c("leiden", "louvain", "walktrap", "components"),
                            min_affinity = 0.1, merge = 0.5, min_samples = 3, min_group_size = 2,
-                           wide = 3, period = NULL, min_share = 0.5, seed = 1) {
+                           wide = 3, period = NULL, min_share = 0.5, seed = 1, outside = 1, wide_trim = 0.1) {
   method <- match.arg(method)
   if (!is.null(group)) {
     group <- .col_name(substitute(group), function() group, names(obs))
@@ -49,7 +52,7 @@ spatial_groups <- function(obs, group = NULL, ud = NULL, h = NULL,
   grp <- if (is.null(group)) stats::setNames(rep("", length(ids)), ids) else
     tapply(as.character(obs[[group]]), as.character(obs$Individual), function(x) x[1])[ids]
   grp_key <- ifelse(is.na(grp), "new", grp)                                # individuals without a group are pooled
-  is_wide <- .wide_ranging(ud, wide, period)
+  is_wide <- .wide_ranging(ud, wide, period, wide_trim)
   core_ok <- ud$n[ids] >= min_samples & !is_wide[ids]
   BA <- ud_overlap(ud, "BA")
 
@@ -84,7 +87,7 @@ spatial_groups <- function(obs, group = NULL, ud = NULL, h = NULL,
     # The other members join the subgroup where most of their samples fall
     others <- setdiff(members, unlist(subs))
     if (length(others)) {
-      att <- attribute_samples(ud, subs)
+      att <- attribute_samples(ud, subs, outside = outside)
       for (i in others) {
         m <- .majority(att$Territory[att$Individual == i], min_share)
         if (!is.na(m) && m != "outside") subs[[m]] <- c(subs[[m]], i)

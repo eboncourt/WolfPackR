@@ -1,10 +1,22 @@
 # WolfPackR 1.1.1
- 
+
 ## Bug fixes
- 
+
 * `isopleth()` (and so `plot_packs()` and the maps drawn from it): with some bandwidths, rounding left hairline gaps between the columns of grid cells, so a territory came out as many vertical strips, each with its own outline. Squares are now merged in grid units, then put back in metres: one outline per territory. Areas are unchanged.
 * `spatial_groups()`: when a group had exactly two core individuals, they made one pack even if their kernels didn't overlap (with three or more, the overlap graph and `min_affinity` already decided). They now need an affinity of at least `min_affinity`. This mostly concerns the pool of individuals without a group, where two unrelated wanderers far apart could make a "new" pack. No change on the Carpathian data or the simulated population.
- 
+
+# WolfPackR 1.1.0
+
+## Changes
+
+* Wide-ranging individuals (`wide` in `assign_individuals()`, `spatial_groups()` and `wolf_packs()`): the radius of gyration now leaves out the farthest 10% of the samples (at least one, keeping at least three). A single foray into a neighbouring territory no longer makes a resident look wide-ranging, which kept it from drawing its territory and could make a small pack disappear; an animal spread over several places is still flagged. On the Carpathian data, one more wolf joins its pack (CC04FK, formerly transient): ARI with Iosif et al. (2025) 0.80 instead of 0.77, and the same result with or without `period` (0.68 without it before). Over 40 simulated populations, residents flagged as wide-ranging dropped from 6.6 to 3.0 on average. `pack_timeline()` still reports the plain radius of gyration.
+* Every threshold can be set from `wolf_packs()`: new arguments `outside` (when a sample is outside every territory; until now only an argument of `attribute_samples()`) and `wide_trim` (share of the farthest samples left out of the radius of gyration; 0 = as before) in `assign_individuals()`, `spatial_groups()` and `wolf_packs()`, `outside` in `pack_timeline()` and `summarise_packs()`, and `max_iter` in `wolf_packs()`. `pack_stability(vary = )` can test them. `wolf_packs()` returns the settings used (`$settings`). The vignette lists all the settings.
+
+## Data
+
+* New simulated example population, with the truth: `samples_example` (343 samples of 56 wolves over four biological years, with dates, seasons and sample types), `genotypes_example` (22 microsatellites), `relate_example` (now computed by `relatedness()`: `QG`, `LR` and `LOD` columns instead of a made-up `wang` one) and `truth_example` (true packs, roles, origins, parents, dispersal dates and pack each year). It replaces the 9-wolf toy dataset and covers every status, families spread over two territories, a pack that disappears, a pack founded during the study, a dated dispersal and breeder turnover. Built by `data-raw/simulate_example.R`; `simulate_population()` (`data-raw/simulate_population.R`) simulates more populations with the same story.
+* The vignette compares WolfPackR results with the truth of the simulated population (packs, statuses, land tenure, lighter sampling).
+
 # WolfPackR 1.0.0
 
 Territories are now estimated by kernel density instead of minimum convex polygons, and the workflow gives every individual an explicit status.

@@ -22,7 +22,8 @@ pack_stability(
 \item{obs, relate, estimator, threshold}{As in \code{\link[=wolf_packs]{wolf_packs()}}.}
 
 \item{vary}{Named list of settings to vary, e.g. \code{list(h = c(1500, 2000, 2500), threshold = c(0.2, 0.25, 0.3))}.
-Any argument of \code{\link[=wolf_packs]{wolf_packs()}} works (\code{h}, \code{threshold}, \code{min_share}, \code{merge}, \code{wide}, \code{method}...).}
+Any argument of \code{\link[=wolf_packs]{wolf_packs()}} works (\code{h}, \code{threshold}, \code{min_share}, \code{merge}, \code{wide}, \code{wide_trim}, \code{outside},
+\code{method}...).}
 
 \item{n_boot}{Number of bootstrap runs (default: 0).}
 

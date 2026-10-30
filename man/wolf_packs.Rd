@@ -19,7 +19,10 @@ wolf_packs(
   min_affinity = 0.1,
   min_group_size = 2,
   seed = 1,
-  ud = NULL
+  ud = NULL,
+  outside = 1,
+  wide_trim = 0.1,
+  max_iter = 20
 )
 }
 \arguments{
@@ -33,7 +36,7 @@ wolf_packs(
 
 \item{period}{Optional period column of \code{obs} (e.g. \code{"Campaign"}): spread measured within each period, dated dispersal.}
 
-\item{min_share, min_samples, wide}{See \code{\link[=assign_individuals]{assign_individuals()}}.}
+\item{min_share, min_samples, wide, wide_trim, outside, max_iter}{See \code{\link[=assign_individuals]{assign_individuals()}}.}
 
 \item{merge, min_affinity, min_group_size}{See \code{\link[=spatial_groups]{spatial_groups()}}.}
 
@@ -48,7 +51,8 @@ An object of class \code{wolfpack}, a list with:
 \item \code{samples}: \code{obs} with \code{Genetic_Group}, \code{Group}, \code{Pack} and \code{Status} added, ready for \code{\link[=summarise_packs]{summarise_packs()}},
 \code{\link[=plot_packs]{plot_packs()}} and \code{\link[=pack_timeline]{pack_timeline()}};
 \item \code{genetic}, \code{assignment}, \code{packs}: the outputs of each step;
-\item \code{ud}: the space use object.
+\item \code{ud}: the space use object;
+\item \code{settings}: the settings used (threshold, bandwidth and every other one), to report them or run again.
 }
 }
 \description{

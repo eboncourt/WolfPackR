@@ -5,24 +5,24 @@
 \alias{relate_example}
 \title{relate_example}
 \format{
-A data.frame with 81 rows (all ordered pairs, including each individual with itself) and 3 variables:
+A data.frame with 1540 rows and 6 variables:
 \describe{
 \item{ind1, ind2}{character, the two individuals}
-\item{wang}{numeric, relatedness}
+\item{QG}{numeric, Queller & Goodnight (1989) relatedness}
+\item{LR}{numeric, Lynch & Ritland (1999) relatedness}
+\item{LOD}{numeric, log10 likelihood ratio first-degree relatives vs unrelated}
+\item{n_loci}{integer, number of loci typed in both individuals}
 }
 }
 \source{
-Simulated.
+Computed from \link{genotypes_example}.
 }
 \usage{
 data(relate_example)
 }
 \description{
-Made-up pairwise relatedness between the 9 individuals of \link{samples_example}, in the format expected by
-\code{\link[=genetic_groups]{genetic_groups()}} and \code{\link[=wolf_packs]{wolf_packs()}}: one row per pair, the two individuals and one column per estimator
-(here a single one, \code{wang}, as an estimator of Wang, 2002, would give). Formerly called \code{relate}.
-}
-\seealso{
-\code{\link[=relatedness]{relatedness()}} to compute relatedness from genotypes, \link{relate_Carpathians} for real data.
+Pairwise relatedness between the 56 individuals of \link{samples_example}, computed with
+\code{relatedness(genotypes_example)}. One row per pair, in the format expected by \code{\link[=genetic_groups]{genetic_groups()}} and \code{\link[=wolf_packs]{wolf_packs()}}.
+Formerly a made-up table of 9 wolves with a single \code{wang} column.
 }
 \keyword{datasets}
