@@ -1,0 +1,37 @@
+cff-version: 1.2.0
+message: "If you use WolfPackR, please cite it as below."
+type: software
+title: "WolfPackR: Identifying wolf packs based on genetic and spatial data"
+abstract: >-
+  R package that delineates wolf packs, and the status of each individual, from
+  pairwise relatedness and the locations of non-invasive genetic samples.
+  Families are found by community detection on the relatedness graph, the space
+  use of each individual is estimated by kernel density with a common bandwidth,
+  each individual is assigned to the territory where most of its samples fall
+  with an explicit status, and families spread over several territories are
+  split into spatially coherent packs. It also computes relatedness from
+  microsatellite genotypes, describes packs including land tenure metrics, and
+  measures agreement with a reference and robustness to settings and sampling
+  effort.
+authors:
+  - family-names: Boncourt
+    given-names: Etienne
+    orcid: "https://orcid.org/0000-0001-8233-0190"
+version: 1.1.0
+date-released: "2026-10-30"
+# Concept DOI ("all versions") from the Zenodo page of the package
+doi: 10.5281/zenodo.23807752
+license: GPL-3.0-or-later
+repository-code: "https://github.com/eboncourt/WolfPackR"
+url: "https://github.com/eboncourt/WolfPackR"
+keywords:
+  - R
+  - wolf
+  - Canis lupus
+  - pack
+  - territory
+  - non-invasive genetic sampling
+  - relatedness
+  - kernel density estimation
+  - community detection
+  - land tenure
