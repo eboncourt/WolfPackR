@@ -5,24 +5,49 @@
 \alias{samples_example}
 \title{samples_example}
 \format{
-An \code{sf} object (POINT, WGS84) with 47 rows and 2 variables:
+An \code{sf} object (POINT, WGS84) with 343 rows and 7 variables:
 \describe{
-\item{Individual}{character, individual ID}
-\item{Sex}{character, "Male" or "Female"}
+\item{Individual}{character, individual ID ("W001" to "W056", in order of first sampling)}
+\item{Sex}{character, "M" or "F"}
+\item{Date}{Date, sampling date}
+\item{Campaign}{character, sampling season from July to June ("2020-21" to "2023-24"), from the date}
+\item{Sample}{character, sample ID}
+\item{Type}{character, sample type: Scat, Urine, Hair, Saliva or Tissue (wolves found dead)}
 \item{geometry}{sfc_POINT}
 }
 }
 \source{
-Simulated.
+Simulated (\code{data-raw/simulate_example.R}).
 }
 \usage{
 data(samples_example)
 }
 \description{
-A small made-up dataset to try the functions: 47 samples of 9 fictive wolves (W1 to W9), in two families
-(W1-W3 and W4-W9, see \link{relate_example}). Formerly called \code{samples}.
+Non-invasive genetic samples of a simulated wolf population followed for four biological years (July to June,
+2020-21 to 2023-24): 343 samples of 56 individuals. Since the population is simulated, the truth is known
+(\link{truth_example}): handy to see what WolfPackR gets right and wrong, to try settings, or to teach.
+}
+\details{
+The story: 8 packs at the start (A to H in \link{truth_example}), 15 km apart, some of them related through their breeders;
+a daughter of pack A founds pack I next door with a male from outside (one family, two territories); both breeders
+of pack C die and one of their sons becomes the breeding male of pack F (a dated dispersal), while a daughter
+becomes a floater; the breeding male of B and the breeding female of G are replaced by animals from outside;
+a transient crosses the area between the territories and a few others leave a single sample. Adults leave 3\% of
+their samples in a neighbouring territory, sampling is lighter in 2022-23 and pack E, on the edge, is poorly sampled.
+Coordinates are placed in the French Alps only to get a background map: they mean nothing.
+
+With the default settings, \code{wolf_packs(samples_example, relate_example, "QG", 0.25, period = "Campaign")} puts
+48 of the 51 pack members with their pack mates (adjusted Rand index 0.94 with the true packs, the median over
+40 populations simulated the same way). Built by \code{data-raw/simulate_example.R}; \code{simulate_population()}, in
+\code{data-raw/simulate_population.R} on GitHub, simulates more populations with the same story.
+Formerly a made-up set of 47 samples of 9 wolves called \code{samples}.
+}
+\examples{
+data("samples_example"); data("relate_example"); data("truth_example")
+res <- wolf_packs(samples_example, relate_example, "QG", 0.25, period = "Campaign")
+compare_partitions(res$individuals, truth_example)
 }
 \seealso{
-\link{samples_Carpathians} for real data.
+\link{genotypes_example}, \link{relate_example}, \link{truth_example}; \link{samples_Carpathians} for real data.
 }
 \keyword{datasets}

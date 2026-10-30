@@ -28,6 +28,7 @@
 #' @param min_share Share of an individual's samples in a period needed to give it a territory for that period (default: 0.5).
 #' @param min_territory Minimum number of samples of a pack in a period to draw its territory for that period (default: 5).
 #' @param level Isopleth level for the overlap between packs in a period (default: 0.95).
+#' @param outside See [attribute_samples()] (default: 1).
 #' @return A list with:
 #'   * `individuals`: one row per individual, with its territory in each period, `pattern`, `change_period`
 #'     and its radius of gyration in each period (km);
@@ -49,7 +50,7 @@
 #' table(tl$individuals$pattern)
 #' tl$territories
 pack_timeline <- function(obs, pack = "Pack", period = "Campaign", ud = NULL, h = NULL,
-                          min_share = 0.5, min_territory = 5, level = 0.95) {
+                          min_share = 0.5, min_territory = 5, level = 0.95, outside = 1) {
   pack <- .col_name(substitute(pack), function() pack, names(obs))
   for (col in c(pack, period)) if (!col %in% names(obs)) stop("Column '", col, "' not found in 'obs'.")
   if (is.null(ud)) ud <- space_use(obs, h = h)
@@ -59,7 +60,7 @@ pack_timeline <- function(obs, pack = "Pack", period = "Campaign", ud = NULL, h 
   terr <- split(ids[!is.na(pk)], pk[!is.na(pk)])
 
   # Territory of every sample, then of every individual in every period
-  s <- attribute_samples(ud, terr)
+  s <- attribute_samples(ud, terr, outside = outside)
   per <- sort(unique(stats::na.omit(s[[period]])))
   seq_mat <- t(vapply(ids, function(i) vapply(per, function(p) {
     t <- s$Territory[s$Individual == i & s[[period]] %in% p]

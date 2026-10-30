@@ -32,6 +32,7 @@
 #'   (default: 5), see [pack_timeline()].
 #' @param sex_column,male_pattern,female_pattern Column holding the sex and regex patterns for males and females.
 #' @param seed Random seed for the permutations (your own random numbers are left alone).
+#' @param outside See [attribute_samples()] (default: 1).
 #' @return A data.frame with one row per pack:
 #'   * `Pack`, `n_individuals`, `n_males`, `n_females`, `n_samples`, one `area<level>_km2` column per level and
 #'     `statuses` (if `obs` has a `Status` column);
@@ -60,7 +61,7 @@
 summarise_packs <- function(obs, pack = "Pack", ud = NULL, h = NULL, levels = c(0.95, 0.5),
                             relate = NULL, estimator = NULL, n_perm = 999,
                             period = NULL, date = NULL, min_territory = 5,
-                            sex_column = "Sex", male_pattern = "^M", female_pattern = "^F", seed = 1) {
+                            sex_column = "Sex", male_pattern = "^M", female_pattern = "^F", seed = 1, outside = 1) {
   pack <- .col_name(substitute(pack), function() pack, names(obs))
   if (!pack %in% names(obs)) stop("Column '", pack, "' doesn't exist.")
   for (col in c(period, date)) if (!col %in% names(obs)) stop("Column '", col, "' doesn't exist.")
@@ -111,9 +112,9 @@ summarise_packs <- function(obs, pack = "Pack", ud = NULL, h = NULL, levels = c(
   tl <- NULL
   if (length(packs) && (!is.null(period) || !is.null(date))) {
     if (!is.null(period)) {
-      tl <- pack_timeline(obs, pack, period, ud = ud, min_territory = min_territory, level = max(levels))
+      tl <- pack_timeline(obs, pack, period, ud = ud, min_territory = min_territory, level = max(levels), outside = outside)
       s <- tl$samples
-    } else s <- attribute_samples(ud, terr)
+    } else s <- attribute_samples(ud, terr, outside = outside)
     s$Individual <- as.character(s$Individual)
     s$Pack <- ind$Pack[match(s$Individual, ind$Individual)]
     home <- s[!is.na(s$Pack) & s$Territory == s$Pack, ]                     # members' samples inside their own territory

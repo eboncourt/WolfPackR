@@ -27,25 +27,33 @@
   iy * ud$nx + ix + 1
 }
 
-# Radius of gyration (m): typical distance of the points to their centre; 0 with fewer than 2 points
-.rg <- function(xy) {
+# Radius of gyration (m): typical distance of the points to their centre; 0 with fewer than 2 points.
+# With trim > 0, the farthest share of the points (rounded up, but keeping at least 3) is left out first
+.rg <- function(xy, trim = 0) {
   if (nrow(xy) < 2) return(0)
+  if (trim > 0 && nrow(xy) > 3) {
+    k <- min(ceiling(trim * nrow(xy)), nrow(xy) - 3)                       # how many points to leave out
+    d <- rowSums(sweep(xy, 2, colMeans(xy))^2)
+    xy <- xy[order(d)[seq_len(nrow(xy) - k)], , drop = FALSE]
+  }
   sqrt(mean(rowSums(sweep(xy, 2, colMeans(xy))^2)))
 }
 
-# Wide-ranging individuals: radius of gyration above `wide` x h. With a period column, the spread is computed
-# within each period having 3+ samples, so an animal that moved from one place to another between periods
+# Wide-ranging individuals: radius of gyration above `wide` x h, leaving out the farthest 10% of the samples
+# (at least one, keeping at least 3), so that a single foray into a neighbouring territory doesn't make a resident
+# look wide-ranging, while an animal spread over several places still is. With a period column, the spread is
+# computed within each period having 3+ samples, so an animal that moved from one place to another between periods
 # is not flagged (and 2 samples far apart in a season don't make a wide-ranger either)
-.wide_ranging <- function(ud, wide, period = NULL) {
+.wide_ranging <- function(ud, wide, period = NULL, trim = 0.1) {
   s <- ud$samples
   rg <- sapply(ud$ids, function(i) {
     w <- which(s$Individual == i)
-    pooled <- .rg(as.matrix(s[w, c("x", "y"), drop = FALSE]))
+    pooled <- .rg(as.matrix(s[w, c("x", "y"), drop = FALSE]), trim)
     if (is.null(period)) return(pooled)
     per <- split(w, s[[period]][w])
     per <- per[lengths(per) >= 3]
     if (!length(per)) return(pooled)                                       # no well-sampled period: pooled spread
-    max(vapply(per, function(r) .rg(as.matrix(s[r, c("x", "y"), drop = FALSE])), numeric(1)))
+    max(vapply(per, function(r) .rg(as.matrix(s[r, c("x", "y"), drop = FALSE]), trim), numeric(1)))
   })
   names(rg) <- ud$ids
   rg > wide * ud$h

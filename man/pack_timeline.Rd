@@ -12,7 +12,8 @@ pack_timeline(
   h = NULL,
   min_share = 0.5,
   min_territory = 5,
-  level = 0.95
+  level = 0.95,
+  outside = 1
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ pack_timeline(
 \item{min_territory}{Minimum number of samples of a pack in a period to draw its territory for that period (default: 5).}
 
 \item{level}{Isopleth level for the overlap between packs in a period (default: 0.95).}
+
+\item{outside}{See \code{\link[=attribute_samples]{attribute_samples()}} (default: 1).}
 }
 \value{
 A list with:

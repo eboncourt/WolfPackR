@@ -7,7 +7,7 @@
 #' @param method Community detection for the genetic groups and the spatial split (default: `"leiden"`).
 #' @param h Kernel bandwidth in metres (default: chosen by [space_use()]).
 #' @param period Optional period column of `obs` (e.g. `"Campaign"`): spread measured within each period, dated dispersal.
-#' @param min_share,min_samples,wide See [assign_individuals()].
+#' @param min_share,min_samples,wide,wide_trim,outside,max_iter See [assign_individuals()].
 #' @param merge,min_affinity,min_group_size See [spatial_groups()].
 #' @param seed Random seed for the community detection.
 #' @param ud Optional `wolfpack_ud` object, to skip the kernel step.
@@ -16,7 +16,8 @@
 #'   * `samples`: `obs` with `Genetic_Group`, `Group`, `Pack` and `Status` added, ready for [summarise_packs()],
 #'     [plot_packs()] and [pack_timeline()];
 #'   * `genetic`, `assignment`, `packs`: the outputs of each step;
-#'   * `ud`: the space use object.
+#'   * `ud`: the space use object;
+#'   * `settings`: the settings used (threshold, bandwidth and every other one), to report them or run again.
 #' @export
 #' @examples
 #' data("samples_Carpathians"); data("relate_Carpathians")
@@ -25,7 +26,8 @@
 #' head(res$individuals)
 wolf_packs <- function(obs, relate, estimator, threshold, method = c("leiden", "louvain", "walktrap", "components"),
                        h = NULL, period = NULL, min_share = 0.5, min_samples = 3, wide = 3,
-                       merge = 0.5, min_affinity = 0.1, min_group_size = 2, seed = 1, ud = NULL) {
+                       merge = 0.5, min_affinity = 0.1, min_group_size = 2, seed = 1, ud = NULL,
+                       outside = 1, wide_trim = 0.1, max_iter = 20) {
   method <- match.arg(method)
 
   # 1. Genetic groups (individuals missing from the relatedness table have none)
@@ -35,11 +37,12 @@ wolf_packs <- function(obs, relate, estimator, threshold, method = c("leiden", "
   # 2. Space use, 3. assignment, 4. packs
   if (is.null(ud)) ud <- space_use(obs, h = h)
   ai <- assign_individuals(obs, "Genetic_Group", ud = ud, relate = relate, estimator = estimator, threshold = threshold,
-                           min_share = min_share, min_samples = min_samples, wide = wide, period = period)
+                           min_share = min_share, min_samples = min_samples, wide = wide, period = period,
+                           max_iter = max_iter, outside = outside, wide_trim = wide_trim)
   obs$Group <- ai$Group[match(as.character(obs$Individual), ai$Individual)]
   sg <- spatial_groups(obs, "Group", ud = ud, method = method, min_affinity = min_affinity, merge = merge,
                        min_samples = min_samples, min_group_size = min_group_size, wide = wide, period = period,
-                       min_share = min_share, seed = seed)
+                       min_share = min_share, seed = seed, outside = outside, wide_trim = wide_trim)
 
   # Everything per individual, and back on the samples
   ind <- ai
@@ -48,8 +51,12 @@ wolf_packs <- function(obs, relate, estimator, threshold, method = c("leiden", "
   obs$Pack <- ind$Pack[match(as.character(obs$Individual), ind$Individual)]
   obs$Status <- ind$Status[match(as.character(obs$Individual), ind$Individual)]
 
-  structure(list(individuals = ind, samples = obs, genetic = gg, assignment = ai, packs = sg, ud = ud),
-            class = "wolfpack")
+  settings <- list(estimator = estimator, threshold = threshold, method = method, h = ud$h, period = period,
+                   min_share = min_share, min_samples = min_samples, wide = wide, wide_trim = wide_trim,
+                   outside = outside, max_iter = max_iter, merge = merge, min_affinity = min_affinity,
+                   min_group_size = min_group_size, seed = seed)
+  structure(list(individuals = ind, samples = obs, genetic = gg, assignment = ai, packs = sg, ud = ud,
+                 settings = settings), class = "wolfpack")
 }
 
 #' @export

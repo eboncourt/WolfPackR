@@ -1,6 +1,6 @@
 Package: WolfPackR
 Title: Identifies wolf packs based on genetic and spatial data
-Version: 1.0.0
+Version: 1.1.0
 Authors@R: 
     person("Etienne", "Boncourt", , "etienne.boncourt@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-8233-0190"))
@@ -10,6 +10,8 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 URL: https://github.com/eboncourt/WolfPackR
 BugReports: https://github.com/eboncourt/WolfPackR/issues
+Depends: 
+    R (>= 4.1.0)
 Imports: 
     dplyr,
     grDevices,

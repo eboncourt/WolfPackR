@@ -4,8 +4,9 @@
 #'
 #'   1. **Reference territories**: the UD of each genetic group is the mix of its members' UDs. Wide-ranging
 #'      individuals (radius of gyration above `wide` x h, i.e. wider than a resident covering a whole territory)
-#'      don't help draw them, and each individual is judged
-#'      against territories drawn without itself.
+#'      don't help draw them, and each individual is judged against territories drawn without itself. The radius
+#'      of gyration leaves out the farthest 10% of the samples (`wide_trim`; at least one, keeping at least three),
+#'      so that a single foray into a neighbouring territory doesn't make a resident look wide-ranging.
 #'   2. **Sample attribution** ([attribute_samples()]): each sample goes to the territory where it is most
 #'      likely, or "outside" when no territory beats a uniform use of the area.
 #'   3. **Majority rule**: the individual goes where more than `min_share` of its samples are (a tie never wins).
@@ -36,11 +37,17 @@
 #'   relatives pair by pair (recommended). If `NULL`, relatives are the members of the same genetic group.
 #' @param min_share Share of the samples needed to assign an individual (default: 0.5).
 #' @param min_samples Below this number of samples, any status other than Resident becomes Undetermined (default: 3).
-#' @param wide Individuals whose radius of gyration exceeds `wide` x h don't help draw the territories (default: 3,
-#'   about 5.6 km in the Carpathians, where a resident using a whole 180 km2 territory has a radius of gyration around 5.4 km).
+#' @param wide Individuals whose radius of gyration (leaving out the farthest `wide_trim` of their samples) exceeds
+#'   `wide` x h don't help draw the territories (default: 3, about 5.6 km in the Carpathians, where a resident using
+#'   a whole 180 km2 territory has a radius of gyration around 5.4 km).
+#' @param wide_trim Share of the samples farthest from the centre left out when measuring the radius of gyration
+#'   (rounded up, keeping at least 3; default: 0.1). 0 gives the plain radius of gyration (versions before 1.1.0).
 #' @param period Optional column of `obs` with the sampling period (e.g. `"Campaign"`): the spread of each individual
 #'   is then measured within each period, and dispersal can be dated.
 #' @param max_iter Maximum number of iterations (default: 20).
+#' @param outside A sample is "outside" every territory when its best territory density is below `outside` times a
+#'   uniform use of the study area (default: 1, see [attribute_samples()]). Higher values send more samples
+#'   outside, hence more Transient individuals.
 #' @return A data.frame with one row per individual: `Individual`, `Genetic_Group`, `Group` (assigned group, `NA`
 #'   for Transient and Undetermined), `Status`, `n_samples`, `share` (share of its samples in `Group`),
 #'   `split` (where its samples went), `wide_ranging`, `low_data` and `change_period`. The attribution of every
@@ -54,7 +61,8 @@
 #'                          period = "Campaign")
 #' table(ai$Status)
 assign_individuals <- function(obs, group, ud = NULL, h = NULL, relate = NULL, estimator = NULL, threshold = NULL,
-                               min_share = 0.5, min_samples = 3, wide = 3, period = NULL, max_iter = 20) {
+                               min_share = 0.5, min_samples = 3, wide = 3, period = NULL, max_iter = 20,
+                               outside = 1, wide_trim = 0.1) {
 
   # Inputs: one genetic group per individual, the UDs, who is wide-ranging
   group <- .col_name(substitute(group), function() group, names(obs))
@@ -66,7 +74,7 @@ assign_individuals <- function(obs, group, ud = NULL, h = NULL, relate = NULL, e
   gsize <- table(gen)
   gen_start <- ifelse(!is.na(gen) & gsize[gen] >= 2, gen, NA)             # singletons start without a group
   names(gen_start) <- ids
-  is_wide <- .wide_ranging(ud, wide, period)
+  is_wide <- .wide_ranging(ud, wide, period, wide_trim)
 
   # Iterate: territories from the current groups, attribute samples, move individuals, until stable
   cur <- gen_start
@@ -76,7 +84,7 @@ assign_individuals <- function(obs, group, ud = NULL, h = NULL, relate = NULL, e
   for (it in seq_len(max_iter)) {
     ok <- !is.na(cur) & !cur %in% c("outside", "undetermined")
     terr <- split(ids[ok & !is_wide], cur[ok & !is_wide])
-    att <- attribute_samples(ud, terr)
+    att <- attribute_samples(ud, terr, outside = outside)
     new <- vapply(ids, function(i) {
       m <- .majority(att$Territory[att$Individual == i], min_share)
       if (is.na(m)) "undetermined" else m

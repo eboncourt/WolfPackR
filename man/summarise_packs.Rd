@@ -19,7 +19,8 @@ summarise_packs(
   sex_column = "Sex",
   male_pattern = "^M",
   female_pattern = "^F",
-  seed = 1
+  seed = 1,
+  outside = 1
 )
 }
 \arguments{
@@ -49,6 +50,8 @@ for the space shared between packs.}
 \item{sex_column, male_pattern, female_pattern}{Column holding the sex and regex patterns for males and females.}
 
 \item{seed}{Random seed for the permutations (your own random numbers are left alone).}
+
+\item{outside}{See \code{\link[=attribute_samples]{attribute_samples()}} (default: 1).}
 }
 \value{
 A data.frame with one row per pack:

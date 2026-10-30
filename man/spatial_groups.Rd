@@ -17,7 +17,9 @@ spatial_groups(
   wide = 3,
   period = NULL,
   min_share = 0.5,
-  seed = 1
+  seed = 1,
+  outside = 1,
+  wide_trim = 0.1
 )
 }
 \arguments{
@@ -40,12 +42,16 @@ single group, i.e. a purely spatial analysis.}
 
 \item{min_group_size}{Minimum number of individuals in a pack (default: 2).}
 
-\item{wide, period}{Wide-ranging individuals (radius of gyration above \code{wide} x h, measured within each \code{period}
-if given) are not core individuals (default \code{wide}: 3).}
+\item{wide, period, wide_trim}{Wide-ranging individuals (radius of gyration above \code{wide} x h, leaving out the
+farthest \code{wide_trim} of their samples, measured within each \code{period} if given) are not core individuals
+(defaults: \code{wide} 3, \code{wide_trim} 0.1; see \code{\link[=assign_individuals]{assign_individuals()}}).}
 
 \item{min_share}{Share of the samples needed for a non-core individual to join a pack (default: 0.5).}
 
 \item{seed}{Random seed for Leiden and Louvain (your own random numbers are left alone).}
+
+\item{outside}{A non-core individual doesn't join a pack when most of its samples are "outside" (default: 1,
+see \code{\link[=attribute_samples]{attribute_samples()}}).}
 }
 \value{
 A data.frame with one row per individual: \code{Individual}, \code{Group}, \code{Pack} (\code{NA} = no pack) and \code{Core}.

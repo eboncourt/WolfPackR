@@ -32,14 +32,14 @@ library(WolfPackR)
 
 # A quick run on simulated data
 
-Nine fictitious wolves, with Wang's relatedness:
+A simulated wolf population: 343 non-invasive samples of 56 wolves over four biological years (July to June), with their genotypes at 22 microsatellites. Since it is simulated, we know what really happened (`truth_example`, see the last section and `?samples_example`).
 
 ```{r toy}
 data("samples_example")
-data("relate_example")
-toy <- wolf_packs(samples_example, relate_example, estimator = "wang", threshold = 0.4)
+data("relate_example")           # relatedness(genotypes_example)
+toy <- wolf_packs(samples_example, relate_example, estimator = "QG", threshold = 0.25, period = "Campaign")
 toy
-toy$individuals[, c("Individual", "Genetic_Group", "Pack", "Status", "split")]
+head(toy$individuals[, c("Individual", "Genetic_Group", "Pack", "Status", "n_samples", "split")])
 plot_packs(toy$samples, "Pack", ud = toy$ud)
 ```
 
@@ -137,6 +137,27 @@ res <- wolf_packs(samples_Carpathians, rel, "QG", 0.25, period = "Campaign")
 res
 ```
 
+Every threshold of the workflow is an argument of `wolf_packs()` (and of the function of the step it belongs to), can be tested with `pack_stability(vary = )`, and is recorded in `res$settings`:
+
+| Setting | Default | What it controls |
+|---|---|---|
+| `threshold` | none (required) | relatedness above which two individuals are relatives |
+| `method` | `"leiden"` | community detection, for families and for the spatial split |
+| `h` | median href | kernel bandwidth (m), the scale at which samples share a place |
+| `min_share` | 0.5 | share of its samples an individual needs in a territory to join it |
+| `outside` | 1 | a sample is outside every territory when none is denser than `outside` times a uniform use of the area; higher values give more transients |
+| `min_samples` | 3 | samples needed for any status other than Resident, and to be a core individual |
+| `wide`, `wide_trim` | 3, 0.1 | wide-ranging above `wide` x `h` (radius of gyration without the farthest 10% of the samples); wide-ranging individuals don't draw territories |
+| `min_affinity`, `merge` | 0.1, 0.5 | overlap (BA) linking two core individuals; overlap above which two subgroups are merged back |
+| `min_group_size` | 2 | smallest pack |
+| `period` | none | spreads measured per period, dispersal dated |
+
+The kernel grid (`res`, `buffer`, `min_href`) is set with `space_use()` and given through `ud`; isopleth levels and permutations with `summarise_packs()`; the minimum samples of a yearly territory with `pack_timeline()`.
+
+```{r settings}
+str(res$settings)
+```
+
 The packs of Iosif et al. (2025), reconstructed from parentage, serve as a reference:
 
 ```{r validation}
@@ -161,6 +182,55 @@ sub <- pack_stability(samples_Carpathians, rel, "QG", 0.25, fraction = c(0.9, 0.
                       reference = reference_Carpathians, period = "Campaign")
 sub$subsampling
 ```
+
+---
+
+# Checking against a known truth: the simulated population
+
+On real data, the reference is never the truth: Iosif et al. (2025) reconstructed their packs with their own data and assumptions. The simulated population of `samples_example` comes with what really happened (`truth_example`). The story: 8 packs (A to H) 15 km apart, some related through their breeders; a daughter of A founds pack I next door in December 2021 with a male from outside; both breeders of C die in 2021-22 and one of their sons becomes the breeding male of F in summer 2023, while a daughter becomes a floater; the breeders of B and G that died are replaced by animals from outside; a transient crosses the area and a few others leave a single sample. Adults leave 3% of their samples in a neighbouring territory, sampling is halved in 2022-23 and pack E, on the edge, is poorly sampled.
+
+```{r truth}
+data("truth_example")
+compare_partitions(toy$individuals, truth_example)
+```
+
+The statuses against what the individuals really were:
+
+```{r truth-status}
+ind <- merge(toy$individuals, truth_example, by = "Individual", suffixes = c("", "_true"))
+table(paste(ind$Role, ind$Origin, sep = ", "), ind$Status)
+ind[ind$Status != "Resident", c("Individual", "Pack_true", "Role", "Origin", "Natal_Pack", "Pack", "Status",
+                                "n_samples", "change_period")]
+```
+
+Most come out as expected: the son of C who became the breeding male of F is a disperser, dated to 2023-24; the female who replaced the dead breeder of G, too late to breed, is an unrelated resident; the daughter of C who became a floater is transient. The others are a reminder that statuses are hypotheses built on what was sampled: a breeder of C whose sampled young all left the territory looks like a putative disperser, and the transient whose samples fell partly in territories stays undetermined, like the one-sample visitors and two young sampled once or twice.
+
+Two genetic groups joined the families of two packs each (through chance links at the 0.25 threshold); the spatial step split them:
+
+```{r truth-split}
+table(ind$Pack_true, as.integer(ind$Genetic_Group))
+table(ind$Pack_true, ind$Pack)
+```
+
+Through time, the pack whose breeders died and the pack founded during the study show up in the land tenure metrics:
+
+```{r truth-time}
+sm <- summarise_packs(toy$samples, "Pack", ud = toy$ud, period = "Campaign", date = "Date")
+sm$true_pack <- tapply(ind$Pack_true, ind$Pack, function(p) names(which.max(table(p))))[sm$Pack]
+sm[, c("Pack", "true_pack", "n_individuals", "first_period", "last_period", "n_periods", "tenure_years")]
+```
+
+`truth_example` also gives where each individual lived each year (`Pack_2020_21` to `Pack_2023_24`), to set against `pack_timeline()`.
+
+And with a lighter sampling effort?
+
+```{r truth-sub}
+sub_sim <- pack_stability(samples_example, relate_example, "QG", 0.25, fraction = c(0.75, 0.5), n_sub = 10,
+                          reference = truth_example, period = "Campaign")
+sub_sim$subsampling
+```
+
+With three quarters of the samples, the median agreement with the truth is ARI = `r round(sub_sim$subsampling$ARI_reference[1], 2)`; with half of them, `r round(sub_sim$subsampling$ARI_reference[2], 2)`. `simulate_population()` (`data-raw/simulate_population.R` on GitHub) simulates other populations with the same story: over 40 of them, the median ARI with the truth was 0.94 (95% of them between 0.87 and 0.99), this one being typical.
 
 # References
 

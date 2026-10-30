@@ -16,7 +16,9 @@ assign_individuals(
   min_samples = 3,
   wide = 3,
   period = NULL,
-  max_iter = 20
+  max_iter = 20,
+  outside = 1,
+  wide_trim = 0.1
 )
 }
 \arguments{
@@ -35,13 +37,21 @@ relatives pair by pair (recommended). If \code{NULL}, relatives are the members 
 
 \item{min_samples}{Below this number of samples, any status other than Resident becomes Undetermined (default: 3).}
 
-\item{wide}{Individuals whose radius of gyration exceeds \code{wide} x h don't help draw the territories (default: 3,
-about 5.6 km in the Carpathians, where a resident using a whole 180 km2 territory has a radius of gyration around 5.4 km).}
+\item{wide}{Individuals whose radius of gyration (leaving out the farthest \code{wide_trim} of their samples) exceeds
+\code{wide} x h don't help draw the territories (default: 3, about 5.6 km in the Carpathians, where a resident using
+a whole 180 km2 territory has a radius of gyration around 5.4 km).}
 
 \item{period}{Optional column of \code{obs} with the sampling period (e.g. \code{"Campaign"}): the spread of each individual
 is then measured within each period, and dispersal can be dated.}
 
 \item{max_iter}{Maximum number of iterations (default: 20).}
+
+\item{outside}{A sample is "outside" every territory when its best territory density is below \code{outside} times a
+uniform use of the study area (default: 1, see \code{\link[=attribute_samples]{attribute_samples()}}). Higher values send more samples
+outside, hence more Transient individuals.}
+
+\item{wide_trim}{Share of the samples farthest from the centre left out when measuring the radius of gyration
+(rounded up, keeping at least 3; default: 0.1). 0 gives the plain radius of gyration (versions before 1.1.0).}
 }
 \value{
 A data.frame with one row per individual: \code{Individual}, \code{Genetic_Group}, \code{Group} (assigned group, \code{NA}
@@ -55,8 +65,9 @@ and gives every individual a group and a status. Replaces \code{ugly_ducklings()
 \enumerate{
 \item \strong{Reference territories}: the UD of each genetic group is the mix of its members' UDs. Wide-ranging
 individuals (radius of gyration above \code{wide} x h, i.e. wider than a resident covering a whole territory)
-don't help draw them, and each individual is judged
-against territories drawn without itself.
+don't help draw them, and each individual is judged against territories drawn without itself. The radius
+of gyration leaves out the farthest 10\% of the samples (\code{wide_trim}; at least one, keeping at least three),
+so that a single foray into a neighbouring territory doesn't make a resident look wide-ranging.
 \item \strong{Sample attribution} (\code{\link[=attribute_samples]{attribute_samples()}}): each sample goes to the territory where it is most
 likely, or "outside" when no territory beats a uniform use of the area.
 \item \strong{Majority rule}: the individual goes where more than \code{min_share} of its samples are (a tie never wins).

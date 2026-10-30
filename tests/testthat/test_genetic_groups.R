@@ -57,14 +57,15 @@ test_that("genetic_groups does not depend on the order of ind1 and ind2", {
 
 # Test 6: one row per pair in random order (like coancestry output) gives the same groups as the full matrix
 test_that("genetic_groups gives the same groups with one row per pair as with the full matrix", {
-  relate <- pkg_data("relate_example")
-  full <- genetic_groups(relate, "wang", 0.4)
+  half <- pkg_data("relate_example")                                      # one row per pair, as relatedness() gives
+  swap <- half
+  swap[, c("ind1", "ind2")] <- half[, c("ind2", "ind1")]
+  full <- genetic_groups(rbind(half, swap), "QG", 0.25)                   # both orientations of every pair
 
-  half <- relate[as.character(relate$ind1) < as.character(relate$ind2), ]  # one row per pair
   set.seed(1)
-  flip <- stats::runif(nrow(half)) < 0.5                                  # then shuffle the orientation
+  flip <- stats::runif(nrow(half)) < 0.5                                  # shuffle the orientation
   half[flip, c("ind1", "ind2")] <- half[flip, c("ind2", "ind1")]
-  from_half <- genetic_groups(half, "wang", 0.4)
+  from_half <- genetic_groups(half, "QG", 0.25)
 
   # same partition (group numbers may differ, so we compare the co-membership)
   same_group <- function(res) outer(res$group, res$group, "==")
