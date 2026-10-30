@@ -1,15 +1,15 @@
-# Comparaison avec la version soumise (0.9.4, MCP) : ARI = 0.52, 24/41 bien placés
-# La 0.9.4 est installée dans une bibliothèque à part et tourne dans une session R séparée (callr), pour ne pas toucher à la 1.0
+# Comparison with the submitted version (0.9.4, minimum convex polygons): ARI = 0.52, 24/41 correctly placed
+# Version 0.9.4 is installed in a separate library and runs in a separate R session (callr), leaving the current version alone
 
 lib094 <- file.path(tempdir(), "lib_WolfPackR_094")
 dir.create(lib094, showWarnings = FALSE)
-remotes::install_github("eboncourt/WolfPackR", ref = "53861872bbc67148e48ae919e300f6f462051e0f",   # dernier commit de la 0.9.4 sur master
+remotes::install_github("eboncourt/WolfPackR", ref = "53861872bbc67148e48ae919e300f6f462051e0f",   # last commit of 0.9.4 on master
                         lib = lib094, upgrade = "never", dependencies = FALSE)
 
-# L'ancienne chaîne, avec les réglages de la première version de l'article
+# The former workflow, with the settings of the first version of the article
 old <- callr::r(function() {
   library(WolfPackR); library(sf)
-  grDevices::pdf(NULL)                                            # l'ancienne genetic_groups() dessine le graphe
+  grDevices::pdf(NULL)                                            # the old genetic_groups() draws the graph
   data("Bruvo_Carpathians"); data("samples_Carpathians")
   gg <- genetic_groups(Bruvo_Carpathians, threshold = 0.7, estimator = "1-Bruvo")
   ud0 <- suppressWarnings(ugly_ducklings(merge(samples_Carpathians, gg, by = "Individual"), group = group,
@@ -18,11 +18,11 @@ old <- callr::r(function() {
                                          percentile = 100, buffer_radius = 1e-7, max_iterations = 20, min_mcp_overlap = 0.5))
   c(packageVersion("WolfPackR") == "0.9.4", setNames(sg0$Subgroup, sg0$Individual))
 }, libpath = c(lib094, .libPaths()))
-stopifnot("La session séparée n'a pas chargé la 0.9.4" = old[1] == "TRUE")
+stopifnot("The separate session did not load version 0.9.4" = old[1] == "TRUE")
 old <- old[-1]
 old[old %in% "Lone Individual"] <- NA
 
-# Et la comparaison, avec la 1.0
+# And the comparison, with the current version
 library(WolfPackR)
 data("reference_Carpathians")
 compare_partitions(old, reference_Carpathians)
