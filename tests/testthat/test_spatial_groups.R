@@ -41,3 +41,14 @@ test_that("packs smaller than min_group_size are dropped", {
   sg2 <- spatial_groups(obs, "g", h = 2000, min_group_size = 1)
   expect_equal(sg2$Pack[sg2$Individual == "A1"], "solo")
 })
+
+test_that("two core individuals that don't overlap are not put in the same pack", {
+  obs <- sim_samples()
+  obs <- obs[obs$Individual %in% c("A2", "B2", "U"), ]               # A2 and B2 are 20 km apart, U shares A2's area
+  obs$g <- NA                                                           # all in the pool of individuals without a group
+  sg <- spatial_groups(obs[obs$Individual != "U", ], "g", h = 2000)
+  expect_true(all(is.na(sg$Pack)))                                      # before 1.1.1: one "new" pack across 20 km
+  sg2 <- spatial_groups(obs, "g", h = 2000)                             # 3 cores: A2 and U together, B2 alone (dropped)
+  p <- stats::setNames(sg2$Pack, sg2$Individual)
+  expect_equal(p[["A2"]], p[["U"]]); expect_true(is.na(p[["B2"]]))
+})

@@ -1,3 +1,10 @@
+# WolfPackR 1.1.1
+ 
+## Bug fixes
+ 
+* `isopleth()` (and so `plot_packs()` and the maps drawn from it): with some bandwidths, rounding left hairline gaps between the columns of grid cells, so a territory came out as many vertical strips, each with its own outline. Squares are now merged in grid units, then put back in metres: one outline per territory. Areas are unchanged.
+* `spatial_groups()`: when a group had exactly two core individuals, they made one pack even if their kernels didn't overlap (with three or more, the overlap graph and `min_affinity` already decided). They now need an affinity of at least `min_affinity`. This mostly concerns the pool of individuals without a group, where two unrelated wanderers far apart could make a "new" pack. No change on the Carpathian data or the simulated population.
+ 
 # WolfPackR 1.0.0
 
 Territories are now estimated by kernel density instead of minimum convex polygons, and the workflow gives every individual an explicit status.

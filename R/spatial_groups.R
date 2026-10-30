@@ -67,7 +67,8 @@ spatial_groups <- function(obs, group = NULL, ud = NULL, h = NULL,
       gr <- igraph::graph_from_adjacency_matrix(W, mode = "undirected", weighted = TRUE, diag = FALSE)
       memb <- .with_seed(seed, .communities(gr, method))
       split(core, memb)
-    } else if (length(core)) list(core) else list()
+    } else if (length(core) == 2 && BA[core[1], core[2]] < min_affinity) as.list(core)   # two cores that don't overlap stay apart
+    else if (length(core)) list(core) else list()
 
     # Merge back the subgroups that overlap a lot, the most overlapping pair first
     while (length(subs) >= 2) {
