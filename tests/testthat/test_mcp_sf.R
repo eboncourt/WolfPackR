@@ -4,6 +4,11 @@ calculate_overlap <- function(...) quiet_deprecated(WolfPackR::calculate_overlap
 
 # load data
 samples <- pkg_data("samples_example")
+# two samples of one wolf about 5 km apart, in lon/lat (fixed here so the tests don't depend on the example data);
+# same CRS object as the data, since the text of EPSG:4326 differs between PROJ versions
+two_samples <- sf::st_sf(Individual = "W1", geometry = sf::st_sfc(sf::st_point(c(6.114753, 45.28248)),
+                                                                  sf::st_point(c(6.045548, 45.27849)),
+                                                                  crs = sf::st_crs(samples)))
 
 test_that("mcp_sf returns a polygon for a regular set of points", {
   result <- mcp_sf(samples)
@@ -45,11 +50,11 @@ test_that("mcp_sf returns a polygon when the percentile filter leaves fewer than
 # Regression test: the 2-point buffer used to lose the CRS and be computed in degrees,
 # while the 1-point buffer was in metres
 test_that("mcp_sf keeps the CRS and uses metres for 1 and 2 points in lon/lat", {
-  two <- samples[1:2, ]
+  two <- two_samples
   r <- 100                                                      # metres
   m1 <- suppressWarnings(mcp_sf(two[1, ], buffer_radius = r))
   m2 <- suppressWarnings(mcp_sf(two, buffer_radius = r))
-  expect_equal(sf::st_crs(m2), sf::st_crs(samples))
+  expect_equal(sf::st_crs(m2), sf::st_crs(two))                # same CRS as the input
 
   # 1 point: a disc of radius r; 2 points: a "sausage" of length L and width 2r.
   # s2 buffers are approximations, hence the loose tolerance (the old bug was off by ~10^7)
@@ -68,7 +73,7 @@ test_that("mcp_sf buffers aligned or duplicated points instead of returning a li
 # The 1- and 2-point MCPs must be usable together (they used to have different CRS,
 # so calculate_overlap() failed silently and returned 0)
 test_that("MCPs of individuals with 1 and 2 points can be compared", {
-  two <- samples[1:2, ]
+  two <- two_samples
   m1 <- suppressWarnings(mcp_sf(two[1, ], buffer_radius = 100))
   m2 <- suppressWarnings(mcp_sf(two, buffer_radius = 100))
   expect_gt(calculate_overlap(m2, m1), 0.9)  # the disc sits at the end of the sausage

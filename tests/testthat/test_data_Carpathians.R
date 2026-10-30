@@ -45,10 +45,15 @@ test_that("reference_Carpathians lists 41 wolves of the package in 6 packs", {
   expect_true(all(ref$Individual %in% pkg_data("samples_Carpathians")$Individual))
 })
 
-test_that("the example datasets have their new names and the right format", {
+test_that("the simulated example datasets fit together", {
   r <- pkg_data("relate_example"); s <- pkg_data("samples_example")
-  expect_named(r, c("ind1", "ind2", "wang"))
-  expect_true(all(unique(c(r$ind1, r$ind2)) %in% s$Individual))
+  g <- pkg_data("genotypes_example"); tr <- pkg_data("truth_example")
   expect_s3_class(s, "sf")
+  expect_named(r, c("ind1", "ind2", "QG", "LR", "LOD", "n_loci"))
+  expect_equal(r, relatedness(g))                                       # relate_example is computed from the genotypes
+  expect_setequal(g$Individual, unique(s$Individual))
+  expect_setequal(tr$Individual, unique(s$Individual))
+  expect_true(all(c(tr$Mother, tr$Father) %in% c(tr$Individual, NA)))  # parents are sampled individuals or NA
+  expect_equal(sort(unique(s$Campaign)), c("2020-21", "2021-22", "2022-23", "2023-24"))
   expect_null(suppressWarnings(pkg_data("relate")))                     # old names are gone
 })

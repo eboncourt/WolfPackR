@@ -16,7 +16,8 @@
 #'   for every pair, the share of runs where both are in the same pack.
 #' @param obs,relate,estimator,threshold As in [wolf_packs()].
 #' @param vary Named list of settings to vary, e.g. `list(h = c(1500, 2000, 2500), threshold = c(0.2, 0.25, 0.3))`.
-#'   Any argument of [wolf_packs()] works (`h`, `threshold`, `min_share`, `merge`, `wide`, `method`...).
+#'   Any argument of [wolf_packs()] works (`h`, `threshold`, `min_share`, `merge`, `wide`, `wide_trim`, `outside`,
+#'   `method`...).
 #' @param n_boot Number of bootstrap runs (default: 0).
 #' @param fraction Shares of the samples to keep for the subsampling runs, e.g. `c(0.75, 0.5)` (default: none).
 #' @param n_sub Number of runs per share in `fraction` (default: 20).
