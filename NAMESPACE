@@ -10,6 +10,7 @@ export(genetic_groups)
 export(isopleth)
 export(mcp_sf)
 export(pack_stability)
+export(pack_territories)
 export(pack_timeline)
 export(plot_packs)
 export(relatedness)
@@ -48,12 +49,15 @@ importFrom(igraph,
 )
 importFrom(leaflet,
   addCircleMarkers,
+  addLayersControl,
   addLegend,
   addPolygons,
+  addProviderTiles,
   addTiles,
   colorFactor,
   fitBounds,
-  leaflet
+  leaflet,
+  tileOptions
 )
 importFrom(sf,
   st_area,

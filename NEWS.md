@@ -1,3 +1,16 @@
+# WolfPackR 1.2.0
+
+## New features
+
+* `pack_territories()`: kernel territories of several packs at once. Plain isopleths spill over into the neighbours' territories by about the bandwidth h, even when the packs' samples don't mix. With `exclusive = TRUE`, the space claimed by several packs (inside their largest isopleth) goes to the pack whose UD is the highest there, so neighbouring territories no longer overlap; core areas are cut the same way and stay inside their territory.
+* `plot_packs()` and `summarise_packs()` get `exclusive` (default `FALSE`, as before). In `summarise_packs()`, `shared_pct` is still measured on the plain isopleths: it tells how much of each territory was contested. On the Carpathian data, 95% territories shrink by 3 to 22% (pack 2.1: 305 to 239 km2); core areas don't change.
+
+# WolfPackR 1.1.2
+
+## New features
+* `plot_packs()`: `tiles` chooses the background map(s) (leaflet providers, IGN Geoplateforme, URL templates), with a selector when there are several.
+
+
 # WolfPackR 1.1.1
 
 ## Bug fixes

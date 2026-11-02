@@ -4,7 +4,15 @@
 \alias{plot_packs}
 \title{Plot Packs Interactively}
 \usage{
-plot_packs(obs, pack = "Pack", ud = NULL, h = NULL, levels = c(0.95, 0.5))
+plot_packs(
+  obs,
+  pack = "Pack",
+  ud = NULL,
+  h = NULL,
+  levels = c(0.95, 0.5),
+  tiles = c(`Topo (Esri)` = "Esri.WorldTopoMap"),
+  exclusive = FALSE
+)
 }
 \arguments{
 \item{obs}{An \code{sf} object of points (one row per sample) with \code{Individual} and the pack column.}
@@ -17,6 +25,18 @@ plot_packs(obs, pack = "Pack", ud = NULL, h = NULL, levels = c(0.95, 0.5))
 \item{h}{Bandwidth passed to \code{\link[=space_use]{space_use()}} when \code{ud} is \code{NULL}.}
 
 \item{levels}{Isopleth levels drawn (default: 95\% territory and 50\% core area).}
+
+\item{tiles}{Background map(s): names of \code{leaflet.providers} (e.g. \code{"Esri.WorldTopoMap"}, \code{"CartoDB.Positron"}),
+\code{"OpenStreetMap"}, or tile URL templates (\code{"https://.../{z}/{x}/{y}.png"}). With several, the first one is shown
+and a selector lets you switch; the names of the vector are the labels of the selector.
+\code{"GeoportailFrance.plan"} and \code{"GeoportailFrance.orthos"} (IGN map and aerial photos, France) use the IGN
+Geoplateforme whatever the version of \code{leaflet.providers} (up to 2.0.0 it points to a closed server).
+OpenStreetMap tiles are refused (403) when the map is saved with \code{htmlwidgets::saveWidget()} and opened from the
+disk: their servers require a Referer, which a local file doesn't send. Default: Esri topographic map.}
+
+\item{exclusive}{Draw the territories without overlap: where the isopleths of several packs overlap, the space goes
+to the pack using it most (see \code{\link[=pack_territories]{pack_territories()}}). Default: \code{FALSE}, the plain isopleths, which spill over
+into the neighbours' territories by about the bandwidth h.}
 }
 \value{
 An interactive leaflet map.
@@ -24,10 +44,16 @@ An interactive leaflet map.
 \description{
 Interactive map of the packs: kernel territories (95\% isopleth, outlined) and core areas
 (50\% isopleth, filled), and the samples coloured by pack. Individuals without a pack are drawn in white.
-Clicking a sample shows the individual, its pack and, when there are such columns, its status and date.
+Clicking a sample shows the individual, its pack and, when there are such columns, its status and date;
+clicking a territory, its pack, level, area and members.
 }
 \examples{
 data("samples_Carpathians"); data("relate_Carpathians")
 res <- wolf_packs(samples_Carpathians, relate_Carpathians, "QG", 0.25)
 plot_packs(res$samples, "Pack", ud = res$ud)
+# several backgrounds, with a selector
+plot_packs(res$samples, "Pack", ud = res$ud,
+           tiles = c("Topo" = "Esri.WorldTopoMap", "Aerial" = "Esri.WorldImagery"))
+# territories without overlap between neighbours
+plot_packs(res$samples, "Pack", ud = res$ud, exclusive = TRUE)
 }

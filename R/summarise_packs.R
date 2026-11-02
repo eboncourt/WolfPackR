@@ -33,10 +33,14 @@
 #' @param sex_column,male_pattern,female_pattern Column holding the sex and regex patterns for males and females.
 #' @param seed Random seed for the permutations (your own random numbers are left alone).
 #' @param outside See [attribute_samples()] (default: 1).
+#' @param exclusive Areas of territories without overlap: where the isopleths of several packs overlap, the space goes
+#'   to the pack using it most (see [pack_territories()]). `shared_pct` is still measured on the plain isopleths, so it
+#'   tells how much of each territory was contested. Default: `FALSE`.
 #' @return A data.frame with one row per pack:
-#'   * `Pack`, `n_individuals`, `n_males`, `n_females`, `n_samples`, one `area<level>_km2` column per level and
-#'     `statuses` (if `obs` has a `Status` column);
-#'   * `shared_pct` (% of the territory inside the territory of at least one other pack), `nearest_pack`, `nearest_km`;
+#'   * `Pack`, `n_individuals`, `n_males`, `n_females`, `n_samples`, one `area<level>_km2` column per level (without
+#'     overlap between packs with `exclusive = TRUE`) and `statuses` (if `obs` has a `Status` column);
+#'   * `shared_pct` (% of the territory inside the territory of at least one other pack, on the plain isopleths even
+#'     with `exclusive = TRUE`), `nearest_pack`, `nearest_km`;
 #'   * with `period`: `first_period`, `last_period` and `n_periods` (periods in which the pack was detected in its
 #'     territory), `n_persistent` (members detected there in 2 periods or more), `min_affinity` (affinity between the
 #'     territory of the least similar period and the territory over all periods) and `max_shift_km` (largest
@@ -58,10 +62,13 @@
 #'                       n_perm = 199, period = "Campaign", date = "Date")
 #' sm
 #' attr(sm, "periods")
+#' # areas of territories without overlap between neighbours
+#' summarise_packs(res$samples, "Pack", ud = res$ud, exclusive = TRUE)[, c("Pack", "area95_km2", "area50_km2", "shared_pct")]
 summarise_packs <- function(obs, pack = "Pack", ud = NULL, h = NULL, levels = c(0.95, 0.5),
                             relate = NULL, estimator = NULL, n_perm = 999,
                             period = NULL, date = NULL, min_territory = 5,
-                            sex_column = "Sex", male_pattern = "^M", female_pattern = "^F", seed = 1, outside = 1) {
+                            sex_column = "Sex", male_pattern = "^M", female_pattern = "^F", seed = 1, outside = 1,
+                            exclusive = FALSE) {
   pack <- .col_name(substitute(pack), function() pack, names(obs))
   if (!pack %in% names(obs)) stop("Column '", pack, "' doesn't exist.")
   for (col in c(period, date)) if (!col %in% names(obs)) stop("Column '", col, "' doesn't exist.")
@@ -82,15 +89,18 @@ summarise_packs <- function(obs, pack = "Pack", ud = NULL, h = NULL, levels = c(
   packs <- sort(unique(stats::na.omit(ind$Pack)))
   terr <- split(ind$Individual[!is.na(ind$Pack)], ind$Pack[!is.na(ind$Pack)])[packs]
 
-  # Composition and areas
+  # Composition and areas (territories of all packs at once, so that they can be made exclusive)
+  ter <- if (length(packs)) pack_territories(ud, terr, levels, exclusive)
   out <- do.call(rbind, lapply(packs, function(p) {
     m <- ind[ind$Pack %in% p, ]
     row <- data.frame(Pack = p, n_individuals = nrow(m),
                       n_males = if (!is.null(m$Sex)) sum(grepl(male_pattern, m$Sex)) else NA_integer_,
                       n_females = if (!is.null(m$Sex)) sum(grepl(female_pattern, m$Sex)) else NA_integer_,
                       n_samples = sum(m$n_samples), stringsAsFactors = FALSE)
-    iso <- isopleth(ud, m$Individual, levels)
-    for (k in seq_along(levels)) row[[paste0("area", round(100 * levels[k]), "_km2")]] <- round(iso$area_km2[k], 1)
+    for (k in seq_along(levels)) {
+      a <- ter$area_km2[ter$Pack == p & ter$level == levels[k]]
+      row[[paste0("area", round(100 * levels[k]), "_km2")]] <- round(if (length(a)) a else 0, 1)
+    }
     if (!is.null(m$Status)) row$statuses <- .split_text(m$Status)
     row
   }))

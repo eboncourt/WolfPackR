@@ -20,7 +20,8 @@ summarise_packs(
   male_pattern = "^M",
   female_pattern = "^F",
   seed = 1,
-  outside = 1
+  outside = 1,
+  exclusive = FALSE
 )
 }
 \arguments{
@@ -52,13 +53,18 @@ for the space shared between packs.}
 \item{seed}{Random seed for the permutations (your own random numbers are left alone).}
 
 \item{outside}{See \code{\link[=attribute_samples]{attribute_samples()}} (default: 1).}
+
+\item{exclusive}{Areas of territories without overlap: where the isopleths of several packs overlap, the space goes
+to the pack using it most (see \code{\link[=pack_territories]{pack_territories()}}). \code{shared_pct} is still measured on the plain isopleths, so it
+tells how much of each territory was contested. Default: \code{FALSE}.}
 }
 \value{
 A data.frame with one row per pack:
 \itemize{
-\item \code{Pack}, \code{n_individuals}, \code{n_males}, \code{n_females}, \code{n_samples}, one \verb{area<level>_km2} column per level and
-\code{statuses} (if \code{obs} has a \code{Status} column);
-\item \code{shared_pct} (\% of the territory inside the territory of at least one other pack), \code{nearest_pack}, \code{nearest_km};
+\item \code{Pack}, \code{n_individuals}, \code{n_males}, \code{n_females}, \code{n_samples}, one \verb{area<level>_km2} column per level (without
+overlap between packs with \code{exclusive = TRUE}) and \code{statuses} (if \code{obs} has a \code{Status} column);
+\item \code{shared_pct} (\% of the territory inside the territory of at least one other pack, on the plain isopleths even
+with \code{exclusive = TRUE}), \code{nearest_pack}, \code{nearest_km};
 \item with \code{period}: \code{first_period}, \code{last_period} and \code{n_periods} (periods in which the pack was detected in its
 territory), \code{n_persistent} (members detected there in 2 periods or more), \code{min_affinity} (affinity between the
 territory of the least similar period and the territory over all periods) and \code{max_shift_km} (largest
@@ -100,6 +106,8 @@ sm <- summarise_packs(res$samples, "Pack", ud = res$ud, relate = relate_Carpathi
                       n_perm = 199, period = "Campaign", date = "Date")
 sm
 attr(sm, "periods")
+# areas of territories without overlap between neighbours
+summarise_packs(res$samples, "Pack", ud = res$ud, exclusive = TRUE)[, c("Pack", "area95_km2", "area50_km2", "shared_pct")]
 }
 \references{
 Kanishka, Koley, S., Khan, S., Hussain, Z., Sathyakumar, S., & Habib, B. (2026). The missing metric
