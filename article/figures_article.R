@@ -1,8 +1,9 @@
 # Figures, tables and numbers of the WolfPackR article (ESE revision): this is Appendix S1
-# Needs WolfPackR 1.1.0 (radius of gyration without the farthest 10% of the samples). Everything is recomputed from the
-# data shipped with the package; about 2 to 3 minutes in all. Run from the root of the repository.
-# Fig. 1: workflow; Fig. 2: maps compared with Iosif et al. (2025); Fig. 3: robustness;
-# Table 2: the packs; Tables S1-S2: appendix; numbers_in_text.txt: the numbers cited in the text
+# Needs WolfPackR 1.2.0 (pack_territories(), exclusive territories). Everything is recomputed from the data shipped with
+# the package: about 3 minutes, plus about 15 for the 20 simulated populations of section 8 (n_pop <- 0 to skip them).
+# Run from the root of the repository (section 8 uses data-raw/simulate_population.R).
+# Fig. 1: workflow; Fig. 2: maps compared with Iosif et al. (2025); Fig. 3: robustness; Table 2: the packs;
+# Tables S1-S4 and Fig. S1: appendix; numbers_in_text.txt: the numbers cited in the text
 
 library(WolfPackR)
 library(sf)
@@ -12,6 +13,7 @@ library(patchwork)
 out <- "article/output"                                  # output folder, relative to the root of the repository
 dir.create(out, showWarnings = FALSE, recursive = TRUE)
 width_cm <- 17                                           # full page width
+n_pop <- 20                                              # simulated populations to check territory areas (section 8)
 
 data("samples_Carpathians"); data("effort_Carpathians"); data("relate_Carpathians"); data("reference_Carpathians")
 rel <- relate_Carpathians
@@ -75,15 +77,20 @@ note("Genetic settings of the first version + kernel engine: ARI = ", cmp_old$AR
 # ---- 3. The packs (Table 2) ----------------------------------------------------------------------------------
 smry <- summarise_packs(res$samples, "Pack", ud = ud, relate = rel, estimator = "QG", n_perm = 999,
                         period = "Campaign", date = "Date")
+smry_x <- summarise_packs(res$samples, "Pack", ud = ud, exclusive = TRUE)       # same packs, overlapping space shared out
 maj <- apply(cmp$workflow$table[, smry$Pack, drop = FALSE], 2, function(x) names(which.max(x)))
 tab2 <- data.frame(Pack = smry$Pack, Iosif = paste0(maj, " (", ref$PackName[match(maj, ref$Pack)], ")"),
                    Individuals = paste0(smry$n_individuals, " (", smry$n_males, " M, ", smry$n_females, " F)"),
-                   Samples = smry$n_samples, Area95 = smry$area95_km2, Area50 = smry$area50_km2, Shared = smry$shared_pct,
+                   Samples = smry$n_samples, Area95 = smry$area95_km2,
+                   Area95x = smry_x$area95_km2[match(smry$Pack, smry_x$Pack)],            # without overlap between packs
+                   Area50 = smry$area50_km2, Shared = smry$shared_pct,
                    Seasons = paste0(smry$first_period, " to ", smry$last_period), Persistent = smry$n_persistent,
                    Affinity = smry$min_affinity, Shift = smry$max_shift_km, Tenure = smry$tenure_years,
                    r = smry$mean_r, p = smry$r_p)
 print(tab2)
 write.csv(tab2, file.path(out, "Table2_packs.csv"), row.names = FALSE)
+note("Territories (95%): ", min(tab2$Area95), "-", max(tab2$Area95), " km2, exclusive ", min(tab2$Area95x), "-", max(tab2$Area95x),
+     " km2 ; cores (50%) ", min(tab2$Area50), "-", max(tab2$Area50), " km2 ; shared ", min(tab2$Shared), "-", max(tab2$Shared), " %")
 tl <- pack_timeline(res$samples, "Pack", period = "Campaign", ud = ud)
 note("Individuals changing pack: ", paste(tl$individuals$Individual[tl$individuals$pattern == "changed pack"], collapse = ", "))
 write.csv(attr(smry, "periods"), file.path(out, "TableS2_pack_periods.csv"), row.names = FALSE)
@@ -132,11 +139,11 @@ boxes <- rbind(
   box(4.65, 4.95, 3.9, 1.15, "3. assign_individuals()", "each individual to the territory where\nmost of its samples fall; a status\nfrom where its relatives are", "Main"),
   box(4.65, 3.4, 3.9, 0.95, "4. spatial_groups()", "families split into spatially coherent\npacks (UD overlap, communities)", "Main"),
   box(1.35, 1.35, 2.5, 1.25, "summarise_packs()", "composition, areas,\nshared space, tenure,\nkinship test", "Output"),
-  box(3.85, 1.35, 2.3, 1.25, "plot_packs()", "interactive map,\n95% and 50%\nisopleths", "Output"),
+  box(3.85, 1.35, 2.3, 1.25, "plot_packs()", "interactive map,\nterritories with or\nwithout overlap", "Output"),
   box(6.3, 1.35, 2.4, 1.25, "pack_timeline()", "individuals and\nterritories, season\nby season", "Output"),
   box(9.6, 1.35, 3.6, 1.25, "compare_partitions()\npack_stability()", "agreement with a reference;\nsensitivity, bootstrap, subsampling", "Assessment"),
   box(10.6, 4.95, 2.6, 1.95, "Statuses", "Resident\nPutative disperser\nDisperser (dated)\nUnrelated resident\nTransient\nUndetermined", "Status"),
-  box(10.6, 8.2, 2.6, 1.25, "Building blocks", "ud_overlap()\nisopleth()\nattribute_samples()", "Auxiliary")
+  box(10.6, 8.15, 2.6, 1.55, "Building blocks", "ud_overlap()\nisopleth()\npack_territories()\nattribute_samples()", "Auxiliary")
 )
 arrows <- data.frame(x = c(2.3, 2.3, 7.0, 2.3, 7.0, 6.6, 4.65, 4.65, 4.65, 4.65, 4.65),
                      y = c(9.05, 7.75, 9.05, 5.975, 5.975, 4.95, 4.375, 2.925, 2.925, 2.925, 2.925),
@@ -264,6 +271,109 @@ p3c <- ggplot(nb, aes(n_class, fill = verdict)) + geom_bar(width = 0.65, colour 
 fig3 <- p3a | p3b | p3c
 ggsave(file.path(out, "Fig3_robustness.png"), fig3, width = width_cm, height = 6.5, units = "cm", dpi = 600, bg = "white")
 ggsave(file.path(out, "Fig3_robustness.pdf"), fig3, width = width_cm, height = 6.5, units = "cm")
+
+# ---- 8. Bandwidth, exclusive territories and accuracy of areas (Tables S3-S4, Fig. S1) -------------------------
+# The reference bandwidth links the samples of a territory well but smooths outlines. Ad hoc bandwidth (Kie 2013): for each
+# individual with at least ten samples, the smallest h keeping its 95% isopleth in one piece, then the median
+one_piece <- function(iso) length(st_cast(st_union(st_buffer(st_geometry(iso), 1)), "POLYGON")) == 1
+h_adhoc <- function(obs, min_n = 10, hs = seq(200, 3000, by = 100)) {
+  ids <- names(which(table(obs$Individual) >= min_n))
+  h_i <- sapply(ids, function(i) {
+    o <- obs[obs$Individual == i, ]
+    ok <- sapply(hs, function(hh) one_piece(isopleth(suppressMessages(space_use(o, h = hh)), i, 0.95)))
+    if (!ok[length(ok)]) NA else hs[max(c(0, which(!ok))) + 1]          # NA: never in one piece (two distant areas)
+  })
+  median(h_i, na.rm = TRUE)
+}
+areas <- function(ud_x, members, exclusive, level) {                     # area of each pack at one level (km2)
+  p <- st_drop_geometry(pack_territories(ud_x, members, exclusive = exclusive))
+  setNames(p$area_km2[p$level == level], p$Pack[p$level == level])[names(members)]
+}
+variants <- list("h ref, plain" = c("ref", FALSE), "h ref, exclusive" = c("ref", TRUE),
+                 "h ad hoc, plain" = c("adhoc", FALSE), "h ad hoc, exclusive" = c("adhoc", TRUE))
+
+# Carpathians: same packs, territories drawn four ways (Table S3, Fig. S1)
+h_ad <- h_adhoc(samples_Carpathians)
+ud_ad <- suppressMessages(space_use(samples_Carpathians, h = h_ad))
+members <- split(ind$Individual[!is.na(ind$Pack)], ind$Pack[!is.na(ind$Pack)])
+uds <- list(ref = ud, adhoc = ud_ad)
+tab_s3 <- data.frame(Pack = names(members), Iosif = maj[names(members)])
+for (v in names(variants)) for (l in c(0.95, 0.5))
+  tab_s3[[paste0(v, " (", 100 * l, "%)")]] <- round(areas(uds[[variants[[v]][1]]], members, as.logical(variants[[v]][2]), l), 1)
+print(tab_s3)
+write.csv(tab_s3, file.path(out, "TableS3_areas_Carpathians.csv"), row.names = FALSE)
+note("Carpathians: h ref = ", round(ud$h), " m, h ad hoc = ", h_ad, " m ; 95% areas: ",
+     paste(sapply(names(variants), function(v) { a <- tab_s3[[paste0(v, " (95%)")]]; paste0(v, " ", min(a), "-", max(a)) }), collapse = " ; "))
+
+terr_map <- function(ud_x, exclusive, title) {                           # packs of the workflow, territories drawn one way
+  cols <- group_colours(full)
+  ter <- st_transform(pack_territories(ud_x, members, exclusive = exclusive), 4326)
+  d <- pts; d$g <- full[as.character(d$Individual)]; d$g[is.na(d$g)] <- "none"
+  ggplot() + geom_sf(data = ter[ter$level == 0.95, ], aes(colour = Pack), fill = NA, linewidth = 0.45, show.legend = FALSE) +
+    geom_sf(data = ter[ter$level == 0.5, ], aes(fill = Pack), colour = NA, alpha = 0.35, show.legend = FALSE) +
+    geom_sf(data = d[d$g == "none", ], colour = "grey60", size = 0.5) + geom_sf(data = d[d$g != "none", ], aes(colour = g), size = 0.7) +
+    scale_colour_manual(values = c(cols, none = "grey75"), breaks = sort(names(cols)), name = "Pack") +
+    scale_fill_manual(values = cols, guide = "none") + ggtitle(title) + map_theme
+}
+maps_s1 <- (terr_map(ud, FALSE, paste0("a. h = ", round(ud$h), " m, plain")) | terr_map(ud, TRUE, paste0("b. h = ", round(ud$h), " m, exclusive")) |
+            terr_map(ud_ad, TRUE, paste0("c. h = ", h_ad, " m (ad hoc), exclusive"))) + plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")                                       # one legend for the three maps
+figs1 <- maps_s1 / leg_iso + plot_layout(heights = c(1, 0.05))
+ggsave(file.path(out, "FigS1_territories.png"), figs1, width = width_cm, height = 11.5, units = "cm", dpi = 600, bg = "white")
+
+# Simulated populations: true territories are known (same draws as data-raw/simulate_population.R), so areas can be checked
+true_territories <- function(seed) {                                     # the first draws of simulate_population(seed)
+  set.seed(seed)
+  terr <- data.frame(pack = c("A", "B", "C", "F", "D", "E", "G", "H", "I"),
+                     x = c(0, 15, 30, 7.5, 22.5, 37.5, 0, 15, 7.5), y = c(26, 26, 26, 13, 13, 13, 0, 0, 39))
+  n_t <- nrow(terr)
+  within(terr, {
+    x <- x + rnorm(n_t, 0, 1); y <- y + rnorm(n_t, 0, 1)
+    theta <- runif(n_t, 0, pi); sd1 <- runif(n_t, 3, 3.6); sd2 <- runif(n_t, 2.2, 2.7)
+    cx1 <- x + rnorm(n_t, 0, 1.5); cy1 <- y + rnorm(n_t, 0, 1.5)
+    cx2 <- x + rnorm(n_t, 0, 1.5); cy2 <- y + rnorm(n_t, 0, 1.5)
+  })
+}
+true_areas <- function(t, step = 0.05) {                                 # 95% and 50% highest-density areas of the territory (km2)
+  g <- expand.grid(x = seq(t$x - 15, t$x + 15, step), y = seq(t$y - 15, t$y + 15, step))
+  u1 <- (g$x - t$x) * cos(t$theta) + (g$y - t$y) * sin(t$theta); u2 <- -(g$x - t$x) * sin(t$theta) + (g$y - t$y) * cos(t$theta)
+  d <- 0.65 * dnorm(u1, 0, t$sd1) * dnorm(u2, 0, t$sd2) +                # as in simulate_population(): 65% spread out, 35% at two core sites
+    0.175 * dnorm(g$x, t$cx1, 0.9) * dnorm(g$y, t$cy1, 0.9) + 0.175 * dnorm(g$x, t$cx2, 0.9) * dnorm(g$y, t$cy2, 0.9)
+  cs <- cumsum(sort(d, decreasing = TRUE)) * step^2
+  c(true95 = sum(cs < 0.95) * step^2, true50 = sum(cs < 0.5) * step^2)
+}
+if (n_pop > 0) {
+  source("data-raw/simulate_population.R")
+  sim <- do.call(rbind, lapply(seq_len(n_pop), function(s) {
+    x <- simulate_population(seed = s)
+    r <- suppressMessages(wolf_packs(x$samples_example, x$relate_example, "QG", 0.25, period = "Campaign"))
+    cp <- compare_partitions(r$individuals, x$truth_example)
+    tr <- cp$table[, colnames(cp$table) != "none", drop = FALSE]
+    truth <- apply(tr, 2, function(v) names(which.max(v)))               # true pack of each pack found
+    mem <- split(r$individuals$Individual[!is.na(r$individuals$Pack)], r$individuals$Pack[!is.na(r$individuals$Pack)])
+    mem <- mem[!duplicated(truth[names(mem)])]                           # one pack found per true pack (the first if split)
+    tt <- true_territories(s); ta <- t(sapply(split(tt, tt$pack), true_areas))
+    h_a <- h_adhoc(x$samples_example); u <- list(ref = r$ud, adhoc = suppressMessages(space_use(r$samples, h = h_a)))
+    out_s <- data.frame(seed = s, Pack = names(mem), Truth = truth[names(mem)], h_ref = round(r$ud$h), h_adhoc = h_a,
+                        ARI = cp$summary$ARI, true95 = ta[truth[names(mem)], "true95"], true50 = ta[truth[names(mem)], "true50"])
+    for (v in names(variants)) for (l in c(0.95, 0.5))
+      out_s[[paste0(v, " (", 100 * l, "%)")]] <- areas(u[[variants[[v]][1]]], mem, as.logical(variants[[v]][2]), l)
+    message("Population ", s, " done")
+    out_s
+  }))
+  write.csv(sim, file.path(out, "simulated_areas.csv"), row.names = FALSE)
+  ratio <- function(col, true) { q <- quantile(sim[[col]] / sim[[true]], c(0.5, 0.25, 0.75)); sprintf("%.2f (%.2f-%.2f)", q[1], q[2], q[3]) }
+  tab_s4 <- data.frame(Territories = names(variants),
+                       "95% isopleth" = sapply(names(variants), function(v) ratio(paste0(v, " (95%)"), "true95")),
+                       "50% isopleth" = sapply(names(variants), function(v) ratio(paste0(v, " (50%)"), "true50")), check.names = FALSE)
+  rownames(tab_s4) <- names(variants)
+  print(tab_s4)
+  write.csv(tab_s4, file.path(out, "TableS4_areas_simulated.csv"), row.names = FALSE)
+  note("Simulated populations: ", n_pop, " populations, ", nrow(sim), " packs ; h ref median ", median(unique(sim[, c("seed", "h_ref")])$h_ref),
+       " m, h ad hoc median ", median(unique(sim[, c("seed", "h_adhoc")])$h_adhoc), " m ; ARI with the truth median ",
+       median(unique(sim[, c("seed", "ARI")])$ARI), " ; true 95% areas ", round(min(sim$true95)), "-", round(max(sim$true95)), " km2")
+  for (v in names(variants)) note("  estimated / true, ", v, ": 95% ", tab_s4[v, 2], " ; 50% ", tab_s4[v, 3])
+}
 
 writeLines(numbers, file.path(out, "numbers_in_text.txt"))
 sessionInfo()

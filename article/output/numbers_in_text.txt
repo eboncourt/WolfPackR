@@ -1,0 +1,35 @@
+Samples collected with a position: 502; genotyped as wolf: 263
+Wolf samples: 263; individuals: 47
+By season: 2017-18 85, 2018-19 46, 2019-20 132
+By type: Blood 2, Blood-noninvasive 1, Hair 6, Scat 178, Tissue 1, Urine 75
+Samples per individual: median 4, 1 sample: 10, 2: 7, >= 10: 8
+Genotyping success in the south (< 45.45°N): 46%; in the north: 57%
+Genetic groups (Leiden, QG > 0.25): sizes 13 12 11 8 1 1 1; modularity Q = 0.67, z = 23.6
+Bandwidth h = 1868 m
+Statuses: Putative disperser 3, Resident 38, Undetermined 4, Unrelated resident 2
+Packs: 1 12, 2.1 7, 2.2 4, 3 11, 4 8; without a pack: 5
+Agreement with Iosif, genetics: ARI = 0.52, NMI = 0.65, correctly placed = 27/41, packs recovered = 4
+Agreement with Iosif, space: ARI = 0.72, NMI = 0.81, correctly placed = 31/41, packs recovered = 4
+Agreement with Iosif, workflow: ARI = 0.8, NMI = 0.86, correctly placed = 34/41, packs recovered = 5
+Genetic settings of the first version + kernel engine: ARI = 0.73, correctly placed = 30/41
+Territories (95%): 111.5-313.9 km2, exclusive 108.2-244.8 km2 ; cores (50%) 27.9-65.5 km2 ; shared 16.7-34.7 %
+Individuals changing pack: CC00JK, CC01F2
+Grid (144 settings): median ARI with Iosif 0.79 (0.05-0.85)
+  leiden: median ARI 0.8 (0.71-0.84)
+  louvain: median ARI 0.8 (0.71-0.84)
+  walktrap: median ARI 0.8 (0.71-0.85)
+  components: median ARI 0.15 (0.05-0.77)
+Pack e: share of runs where its members are together = 0.26
+Bootstrap: median ARI with Iosif 0.78, 95% interval 0.67-0.88
+Subsampling 90% (237 samples): ARI with Iosif 0.8 (0.72-0.83), individuals 46, packs 5
+Subsampling 75% (197 samples): ARI with Iosif 0.74 (0.68-0.84), individuals 44, packs 5
+Subsampling 50% (132 samples): ARI with Iosif 0.62 (0.5-0.79), individuals 40, packs 5
+Subsampling 25% (66 samples): ARI with Iosif 0.34 (0.18-0.47), individuals 30.5, packs 4
+Mean stability (bootstrap + subsampling) by number of samples: 1 -> 0.77; 2 -> 0.82; 3-4 -> 0.8; 5-9 -> 0.77; 10+ -> 0.79
+Reference individuals misplaced or without a pack: 7, of which 7 with 1 or 2 samples (EK.18AU, CC01F2, CC063M, CC063J, EF.15J8, CC066H, CC05X0)
+Carpathians: h ref = 1868 m, h ad hoc = 1000 m ; 95% areas: h ref, plain 111.5-313.9 ; h ref, exclusive 108.2-244.8 ; h ad hoc, plain 54.4-188.6 ; h ad hoc, exclusive 54.3-161.6
+Simulated populations: 20 populations, 171 packs ; h ref median 1802.5 m, h ad hoc median 1150 m ; ARI with the truth median 0.935 ; true 95% areas 108-154 km2
+  estimated / true, h ref, plain: 95% 1.61 (1.33-1.98) ; 50% 2.11 (1.85-2.39)
+  estimated / true, h ref, exclusive: 95% 1.37 (1.21-1.59) ; 50% 2.11 (1.85-2.39)
+  estimated / true, h ad hoc, plain: 95% 1.13 (0.90-1.46) ; 50% 1.48 (1.32-1.86)
+  estimated / true, h ad hoc, exclusive: 95% 1.00 (0.86-1.26) ; 50% 1.48 (1.32-1.86)

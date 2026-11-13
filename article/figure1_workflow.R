@@ -18,11 +18,11 @@ boxes <- rbind(
   box(4.65, 4.95, 3.9, 1.15, "3. assign_individuals()", "each individual to the territory where\nmost of its samples fall; a status\nfrom where its relatives are", "Main"),
   box(4.65, 3.4, 3.9, 0.95, "4. spatial_groups()", "families split into spatially coherent\npacks (UD overlap, communities)", "Main"),
   box(1.35, 1.35, 2.5, 1.25, "summarise_packs()", "composition, areas,\nshared space, tenure,\nkinship test", "Output"),
-  box(3.85, 1.35, 2.3, 1.25, "plot_packs()", "interactive map,\n95% and 50%\nisopleths", "Output"),
+  box(3.85, 1.35, 2.3, 1.25, "plot_packs()", "interactive map,\nterritories with or\nwithout overlap", "Output"),
   box(6.3, 1.35, 2.4, 1.25, "pack_timeline()", "individuals and\nterritories, season\nby season", "Output"),
   box(9.6, 1.35, 3.6, 1.25, "compare_partitions()\npack_stability()", "agreement with a reference;\nsensitivity, bootstrap, subsampling", "Assessment"),
   box(10.6, 4.95, 2.6, 1.95, "Statuses", "Resident\nPutative disperser\nDisperser (dated)\nUnrelated resident\nTransient\nUndetermined", "Status"),
-  box(10.6, 8.2, 2.6, 1.25, "Building blocks", "ud_overlap()\nisopleth()\nattribute_samples()", "Auxiliary")
+  box(10.6, 8.15, 2.6, 1.55, "Building blocks", "ud_overlap()\nisopleth()\npack_territories()\nattribute_samples()", "Auxiliary")
 )
 arrows <- data.frame(x = c(2.3, 2.3, 7.0, 2.3, 7.0, 6.6, 4.65, 4.65, 4.65, 4.65, 4.65),
                      y = c(9.05, 7.75, 9.05, 5.975, 5.975, 4.95, 4.375, 2.925, 2.925, 2.925, 2.925),
